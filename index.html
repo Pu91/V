@@ -3,51 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Medicine Bill AI Scanner</title>
+    <title>Pro Medical Bill Scanner</title>
+    <!-- Tesseract.js for OCR -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
-        body { font-family: sans-serif; padding: 20px; background: #f0f2f5; }
-        .box { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        .upload { border: 2px dashed #007bff; padding: 20px; text-align: center; margin-bottom: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-        th { background: #007bff; color: white; }
-        #status { color: blue; font-weight: bold; margin: 10px 0; display: block; }
-        .btn { background: #28a745; color: white; padding: 10px 20px; border: none; cursor: pointer; display: none; margin-top: 10px; }
+        :root { --primary: #2c3e50; --accent: #27ae60; --light: #ecf0f1; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--light); margin: 0; padding: 15px; }
+        .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        h2 { text-align: center; color: var(--primary); margin-bottom: 20px; }
+        
+        /* Camera & Upload Styles */
+        #camera-container { width: 100%; border-radius: 10px; overflow: hidden; background: #000; position: relative; margin-bottom: 15px; display: none;}
+        video { width: 100%; display: block; }
+        .action-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        button { padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .btn-cam { background: #3498db; color: white; }
+        .btn-up { background: #9b59b6; color: white; }
+        .btn-capture { background: var(--accent); color: white; width: 100%; margin-top: 10px; }
+        
+        /* Form Styles */
+        .form-group { margin-bottom: 12px; }
+        label { display: block; font-size: 13px; color: #666; margin-bottom: 4px; }
+        input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-size: 15px; background: #f9f9f9; }
+        input:focus { border-color: var(--accent); outline: none; background: #fff; }
+
+        .nav-btns { display: flex; justify-content: space-between; margin-top: 20px; }
+        .btn-prev { background: #95a5a6; color: white; }
+        .btn-next { background: var(--primary); color: white; }
+        .btn-save { background: #e74c3c; color: white; width: 100%; margin-top: 15px; font-size: 16px; }
+
+        #status { text-align: center; color: #e67e22; font-weight: bold; margin: 10px 0; font-size: 14px; }
+        canvas { display: none; }
     </style>
 </head>
 <body>
 
-<div class="box">
-    <h2>Medicine Bill Scanner (AI)</h2>
-    
-    <div class="upload">
-        <input type="file" id="imageInput" accept="image/*">
-        <button onclick="startScanning()">Scan Image</button>
-        <span id="status"></span>
+<div class="container">
+    <h2>Medicine Bill Importer</h2>
+
+    <!-- Camera View -->
+    <div id="camera-container">
+        <video id="video" autoplay playsinline></video>
+        <button class="btn-capture" onclick="captureImage()">📸 Take Photo & Scan</button>
     </div>
 
-    <table id="myTable">
-        <thead>
-            <tr>
-                <th>Qty</th>
-                <th>Packing</th>
-                <th>Description</th>
-                <th>Batch No</th>
-                <th>MRP</th>
-                <th>Amount</th>
-            </tr>
-        </thead>
-        <tbody id="tableBody"></tbody>
-    </table>
+    <!-- Controls -->
+    <div class="action-btns">
+        <button class="btn-cam" onclick="startCamera()">Open Camera</button>
+        <button class="btn-up" onclick="document.getElementById('fileInput').click()">Upload Bill</button>
+    </div>
+    <input type="file" id="fileInput" hidden accept="image/*" onchange="processFile(event)">
 
-    <button id="saveBtn" class="btn" onclick="saveData()">Save to Firebase</button>
+    <div id="status">Ready to Scan...</div>
+
+    <!-- Data Entry Form -->
+    <div id="entry-form" style="display: none;">
+        <p id="counter" style="text-align: right; font-weight: bold;">Product 1/1</p>
+        
+        <div class="form-group">
+            <label>Medicine Description</label>
+            <input type="text" id="desc" placeholder="Product Name">
+        </div>
+        <div class="form-group">
+            <label>Batch No</label>
+            <input type="text" id="batch" placeholder="Batch Number">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div class="form-group"><label>Qty</label><input type="text" id="qty"></div>
+            <div class="form-group"><label>Expiry</label><input type="text" id="exp"></div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div class="form-group"><label>MRP</label><input type="text" id="mrp"></div>
+            <div class="form-group"><label>Rate</label><input type="text" id="rate"></div>
+        </div>
+        <div class="form-group">
+            <label>Total Amount</label>
+            <input type="text" id="amount">
+        </div>
+
+        <div class="nav-btns">
+            <button class="btn-prev" onclick="prevItem()">← Previous</button>
+            <button class="btn-next" onclick="nextItem()">Next Item →</button>
+        </div>
+        <button class="btn-save" onclick="saveData()">Save All To Inventory</button>
+    </div>
 </div>
 
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+<canvas id="canvas"></canvas>
 
-    // Firebase Configuration
+<script type="module">
+    // Firebase Setup
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
     const firebaseConfig = {
         apiKey: "AIzaSyD_MJAYCk5JZuOn6_YwsBC86gBKxwC_EKY",
         authDomain: "cosmatic-a7f73.firebaseapp.com",
@@ -60,93 +108,132 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // AI Configuration
-    const API_KEY = "AIzaSyDTiZqqwSa2s4IORRsnxC2vckMo1Kdq7ko"; // <--- আপনার নতুন API Key এখানে দিন
-    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+    let products = [];
+    let currentIndex = 0;
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
 
-    let extractedData = [];
-
-    window.startScanning = async () => {
-        const file = document.getElementById('imageInput').files[0];
-        const status = document.getElementById('status');
-        if (!file) return alert("Select an image first!");
-
-        status.innerText = "Scanning... please wait.";
-        
+    // Camera Logic
+    window.startCamera = async function() {
+        document.getElementById('camera-container').style.display = 'block';
         try {
-            const base64 = await toBase64(file);
-            const base64Data = base64.split(',')[1];
-
-            const response = await fetch(API_URL, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    contents: [{
-                        parts: [
-                            { text: "Extract medicine bill details into a JSON array. Required keys: qty, packing, description, batch, mrp, amount. Output only the JSON array." },
-                            { inline_data: { mime_type: "image/jpeg", data: base64Data } }
-                        ]
-                    }]
-                })
-            });
-
-            const resJson = await response.json();
-            
-            // Error Handling if API fails
-            if(resJson.error) {
-                status.innerText = "Error: " + resJson.error.message;
-                return;
-            }
-
-            const aiText = resJson.candidates[0].content.parts[0].text;
-            // Clean AI text to get only JSON
-            const cleanJson = aiText.substring(aiText.indexOf('['), aiText.lastIndexOf(']') + 1);
-            extractedData = JSON.parse(cleanJson);
-
-            renderTable(extractedData);
-            status.innerText = "Success! Check the table below.";
-            document.getElementById('saveBtn').style.display = "block";
-
-        } catch (err) {
-            console.error(err);
-            status.innerText = "Something went wrong. Check Console (F12).";
-        }
-    };
-
-    function renderTable(items) {
-        const tbody = document.getElementById('tableBody');
-        tbody.innerHTML = items.map(item => `
-            <tr>
-                <td>${item.qty || ''}</td>
-                <td>${item.packing || ''}</td>
-                <td>${item.description || ''}</td>
-                <td>${item.batch || ''}</td>
-                <td>${item.mrp || ''}</td>
-                <td>${item.amount || ''}</td>
-            </tr>
-        `).join('');
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+            video.srcObject = stream;
+        } catch (err) { alert("Camera access denied!"); }
     }
 
-    window.saveData = async () => {
-        try {
-            for (let item of extractedData) {
-                await addDoc(collection(db, "invoices"), {
-                    ...item,
-                    createdAt: serverTimestamp()
+    window.captureImage = function() {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+        const dataUrl = canvas.toDataURL('image/jpeg');
+        processOCR(dataUrl);
+        // Stop camera
+        video.srcObject.getTracks().forEach(track => track.stop());
+        document.getElementById('camera-container').style.display = 'none';
+    }
+
+    window.processFile = function(e) {
+        const reader = new FileReader();
+        reader.onload = () => processOCR(reader.result);
+        reader.readAsDataURL(e.target.files[0]);
+    }
+
+    // Pro OCR Logic
+    async function processOCR(imageSrc) {
+        const status = document.getElementById('status');
+        status.innerText = "🔍 Scanning Pro... Please wait...";
+        
+        const worker = await Tesseract.createWorker('eng');
+        const { data } = await worker.recognize(imageSrc);
+        await worker.terminate();
+
+        const lines = data.lines;
+        products = [];
+
+        lines.forEach(line => {
+            const text = line.text.trim();
+            // Regex to find potential medicine rows (Filtering lines with numbers and keywords)
+            if (text.length > 15 && (text.includes('TAB') || text.includes('CAP') || text.includes('PASTE') || text.includes('%'))) {
+                const parts = text.split(/\s+/);
+                
+                // Logic to extract columns based on bill structure
+                products.push({
+                    description: parts.slice(0, 3).join(" "), // Medicine Name
+                    qty: parts.find(p => p.length < 3 && !isNaN(p)) || "1",
+                    batch: parts.find(p => p.length > 4 && /[A-Z0-9]/.test(p)) || "N/A",
+                    exp: text.match(/\d{2}\/\d{2}/) ? text.match(/\d{2}\/\d{2}/)[0] : "00/00",
+                    mrp: parts.find(p => p.includes('.') && parseFloat(p) > 10) || "0",
+                    rate: parts[parts.length - 2] || "0",
+                    amount: parts[parts.length - 1] || "0"
                 });
             }
-            alert("Data saved to Firebase!");
+        });
+
+        if (products.length > 0) {
+            currentIndex = 0;
+            status.innerText = "✅ Found " + products.length + " items!";
+            showItem();
+            document.getElementById('entry-form').style.display = 'block';
+        } else {
+            status.innerText = "❌ No clear products found. Try again.";
+        }
+    }
+
+    function showItem() {
+        const item = products[currentIndex];
+        document.getElementById('counter').innerText = `Product ${currentIndex + 1} of ${products.length}`;
+        document.getElementById('desc').value = item.description;
+        document.getElementById('qty').value = item.qty;
+        document.getElementById('batch').value = item.batch;
+        document.getElementById('exp').value = item.exp;
+        document.getElementById('mrp').value = item.mrp;
+        document.getElementById('rate').value = item.rate;
+        document.getElementById('amount').value = item.amount;
+    }
+
+    window.nextItem = function() {
+        saveCurrentEdit();
+        if (currentIndex < products.length - 1) {
+            currentIndex++;
+            showItem();
+        } else { alert("This is the last product!"); }
+    }
+
+    window.prevItem = function() {
+        saveCurrentEdit();
+        if (currentIndex > 0) {
+            currentIndex--;
+            showItem();
+        }
+    }
+
+    function saveCurrentEdit() {
+        products[currentIndex] = {
+            description: document.getElementById('desc').value,
+            qty: document.getElementById('qty').value,
+            batch: document.getElementById('batch').value,
+            exp: document.getElementById('exp').value,
+            mrp: document.getElementById('mrp').value,
+            rate: document.getElementById('rate').value,
+            amount: document.getElementById('amount').value
+        };
+    }
+
+    window.saveData = async function() {
+        saveCurrentEdit();
+        document.getElementById('status').innerText = "💾 Saving to Firebase...";
+        try {
+            for (const p of products) {
+                await addDoc(collection(db, "medicine_bills"), p);
+            }
+            alert("Success! All medicines added to your inventory.");
+            location.reload();
         } catch (e) {
+            console.error(e);
             alert("Error saving data.");
         }
-    };
-
-    const toBase64 = file => new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = error => reject(error);
-    });
+    }
 </script>
 
 </body>

@@ -1,27 +1,153 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="/style.css">
-  <title>apni kaksha</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medicine Bill AI Scanner</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #f0f2f5; }
+        .box { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .upload { border: 2px dashed #007bff; padding: 20px; text-align: center; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background: #007bff; color: white; }
+        #status { color: blue; font-weight: bold; margin: 10px 0; display: block; }
+        .btn { background: #28a745; color: white; padding: 10px 20px; border: none; cursor: pointer; display: none; margin-top: 10px; }
+    </style>
 </head>
-
 <body>
-<header>
-  <h1>apni kaksha</h1>
-</header>
-<nav>
-  <a href="#">Home</a>
-  <a href="#">All Course </a>
-  <a href="#">Study Meterial</a>
-  <a href="#">Your Profile</a>
-  <a href="#">Test</a>
-</nav>
-<div>
-  <h2>Course</h2>
-</div>
-</body>
 
+<div class="box">
+    <h2>Medicine Bill Scanner (AI)</h2>
+    
+    <div class="upload">
+        <input type="file" id="imageInput" accept="image/*">
+        <button onclick="startScanning()">Scan Image</button>
+        <span id="status"></span>
+    </div>
+
+    <table id="myTable">
+        <thead>
+            <tr>
+                <th>Qty</th>
+                <th>Packing</th>
+                <th>Description</th>
+                <th>Batch No</th>
+                <th>MRP</th>
+                <th>Amount</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+    </table>
+
+    <button id="saveBtn" class="btn" onclick="saveData()">Save to Firebase</button>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    // Firebase Configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyD_MJAYCk5JZuOn6_YwsBC86gBKxwC_EKY",
+        authDomain: "cosmatic-a7f73.firebaseapp.com",
+        projectId: "cosmatic-a7f73",
+        storageBucket: "cosmatic-a7f73.firebasestorage.app",
+        messagingSenderId: "693000942896",
+        appId: "1:693000942896:web:5208e137c75e62749c44f5"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // AI Configuration
+    const API_KEY = "AIzaSyDTiZqqwSa2s4IORRsnxC2vckMo1Kdq7ko"; // <--- আপনার নতুন API Key এখানে দিন
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+
+    let extractedData = [];
+
+    window.startScanning = async () => {
+        const file = document.getElementById('imageInput').files[0];
+        const status = document.getElementById('status');
+        if (!file) return alert("Select an image first!");
+
+        status.innerText = "Scanning... please wait.";
+        
+        try {
+            const base64 = await toBase64(file);
+            const base64Data = base64.split(',')[1];
+
+            const response = await fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [
+                            { text: "Extract medicine bill details into a JSON array. Required keys: qty, packing, description, batch, mrp, amount. Output only the JSON array." },
+                            { inline_data: { mime_type: "image/jpeg", data: base64Data } }
+                        ]
+                    }]
+                })
+            });
+
+            const resJson = await response.json();
+            
+            // Error Handling if API fails
+            if(resJson.error) {
+                status.innerText = "Error: " + resJson.error.message;
+                return;
+            }
+
+            const aiText = resJson.candidates[0].content.parts[0].text;
+            // Clean AI text to get only JSON
+            const cleanJson = aiText.substring(aiText.indexOf('['), aiText.lastIndexOf(']') + 1);
+            extractedData = JSON.parse(cleanJson);
+
+            renderTable(extractedData);
+            status.innerText = "Success! Check the table below.";
+            document.getElementById('saveBtn').style.display = "block";
+
+        } catch (err) {
+            console.error(err);
+            status.innerText = "Something went wrong. Check Console (F12).";
+        }
+    };
+
+    function renderTable(items) {
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = items.map(item => `
+            <tr>
+                <td>${item.qty || ''}</td>
+                <td>${item.packing || ''}</td>
+                <td>${item.description || ''}</td>
+                <td>${item.batch || ''}</td>
+                <td>${item.mrp || ''}</td>
+                <td>${item.amount || ''}</td>
+            </tr>
+        `).join('');
+    }
+
+    window.saveData = async () => {
+        try {
+            for (let item of extractedData) {
+                await addDoc(collection(db, "invoices"), {
+                    ...item,
+                    createdAt: serverTimestamp()
+                });
+            }
+            alert("Data saved to Firebase!");
+        } catch (e) {
+            alert("Error saving data.");
+        }
+    };
+
+    const toBase64 = file => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+    });
+</script>
+
+</body>
 </html>

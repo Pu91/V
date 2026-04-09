@@ -784,6 +784,11 @@
         let medicines = []; let cart =[]; let salesList = []; let allSalesForExport =[];
         let html5QrCode = null; let myChart = null; let tempSelectedMed = null; let selectedMedForUpdate = null;
 
+        // USB PRINTING VARIABLES (To hold connection)
+        let printDevice = null;
+        let printInterface = null;
+        let printEndpoint = null;
+
         const playSuccess = () => { try { document.getElementById('sound-success').play(); } catch(e){} };
         const playError = () => { try { document.getElementById('sound-error').play(); } catch(e){} };
 
@@ -825,10 +830,9 @@
             setTimeout(() => { document.body.classList.remove(modeClass); }, 500);
         };
 
-        // --- NEW: USB OTG THERMAL PRINTING LOGIC (WebUSB API) ---
+        // --- NEW: USB OTG THERMAL PRINTING LOGIC (WebUSB API + QR Code + One Time Connect) ---
         window.printThermalReceipt = async () => {
             try {
-                // ব্রাউজারে WebUSB সাপোর্ট আছে কিনা চেক করা
                 if (!navigator.usb) {
                     alert("আপনার ব্রাউজারে ডাইরেক্ট USB সাপোর্ট নেই! (দয়া করে Android Chrome ব্রাউজার ব্যবহার করুন)। \n\nবিকল্প হিসেবে নরমাল সিস্টেম প্রিন্ট পেজ ওপেন করা হচ্ছে...");
                     triggerPrint('print-invoice');
@@ -897,61 +901,93 @@
                 receiptText += "--------------------------------" + LF;
                 receiptText += ALIGN_CENTER + BOLD_ON + "TOTAL: Rs." + total + LF + BOLD_OFF;
                 receiptText += "--------------------------------" + LF;
-                receiptText += "THANK YOU ! VISIT AGAIN" + LF;
-                receiptText += "Goods once sold cannot be returned" + LF;
-                receiptText += LF + LF + LF + LF; 
 
-                // Request USB Device (OTG connected thermal printer)
-                const device = await navigator.usb.requestDevice({ filters: [] });
-                
-                // Open the connection
-                await device.open();
-                
-                // Select configuration (usually 1 for thermal printers)
-                if (device.configuration === null) {
-                    await device.selectConfiguration(1);
-                }
-                
-                // Find interface and out endpoint automatically
-                let interfaceNumber = null;
-                let endpointNumber = null;
-                
-                for (const iface of device.configuration.interfaces) {
-                    for (const alt of iface.alternates) {
-                        for (const endpoint of alt.endpoints) {
-                            if (endpoint.direction === 'out') {
-                                interfaceNumber = iface.interfaceNumber;
-                                endpointNumber = endpoint.endpointNumber;
-                                break;
+                // CONNECT TO USB DEVICE ONLY ONCE
+                if (!printDevice) {
+                    let devices = await navigator.usb.getDevices();
+                    if (devices.length > 0) {
+                        printDevice = devices[0];
+                    } else {
+                        printDevice = await navigator.usb.requestDevice({ filters: [] });
+                    }
+                    
+                    await printDevice.open();
+                    
+                    if (printDevice.configuration === null) {
+                        await printDevice.selectConfiguration(1);
+                    }
+                    
+                    let interfaceNumber = null;
+                    let endpointNumber = null;
+                    
+                    for (const iface of printDevice.configuration.interfaces) {
+                        for (const alt of iface.alternates) {
+                            for (const endpoint of alt.endpoints) {
+                                if (endpoint.direction === 'out') {
+                                    interfaceNumber = iface.interfaceNumber;
+                                    endpointNumber = endpoint.endpointNumber;
+                                    break;
+                                }
                             }
+                            if (endpointNumber !== null) break;
                         }
                         if (endpointNumber !== null) break;
                     }
-                    if (endpointNumber !== null) break;
+                    
+                    if (interfaceNumber === null || endpointNumber === null) {
+                        printDevice = null;
+                        throw new Error("USB Printer-এর সঠিক পোর্ট পাওয়া যায়নি!");
+                    }
+                    
+                    await printDevice.claimInterface(interfaceNumber);
+                    printInterface = interfaceNumber;
+                    printEndpoint = endpointNumber;
+                }
+
+                // Create QR Code ESC/POS Command Bytes
+                const qrData = "upi://pay?pa=yourupi@ybl&pn=CosmoStore&cu=INR";
+                const qrLen = qrData.length + 3;
+                const pL = qrLen & 0xFF;
+                const pH = (qrLen >> 8) & 0xFF;
+                
+                // ESC/POS commands to print QR Code
+                const qrBytesArray = [
+                    0x1B, 0x61, 0x01, // Center align
+                    0x1D, 0x28, 0x6B, 0x04, 0x00, 0x31, 0x41, 0x32, 0x00, // Model 2
+                    0x1D, 0x28, 0x6B, 0x03, 0x00, 0x31, 0x43, 0x06,       // Size (6)
+                    0x1D, 0x28, 0x6B, 0x03, 0x00, 0x31, 0x45, 0x31,       // Error Correction (M=49)
+                    0x1D, 0x28, 0x6B, pL, pH, 0x31, 0x50, 0x30            // Store Data Header
+                ];
+                
+                for(let i=0; i<qrData.length; i++) {
+                    qrBytesArray.push(qrData.charCodeAt(i));
                 }
                 
-                if (interfaceNumber === null || endpointNumber === null) {
-                    throw new Error("USB Printer-এর সঠিক পোর্ট পাওয়া যায়নি!");
-                }
+                qrBytesArray.push(0x1D, 0x28, 0x6B, 0x03, 0x00, 0x31, 0x51, 0x30); // Print QR
                 
-                await device.claimInterface(interfaceNumber);
-                
-                // Convert text to ESC/POS bytes
+                // Final Footer Text
+                let footerText = "\nSCAN TO PAY VIA UPI\n--------------------------------\nTHANK YOU ! VISIT AGAIN\nGoods once sold cannot be returned\n\n\n\n";
+
+                // Combine All Bytes Together
                 const encoder = new TextEncoder();
-                const data = encoder.encode(receiptText);
+                const textBytes1 = encoder.encode(receiptText);
+                const qrBytes = new Uint8Array(qrBytesArray);
+                const textBytes2 = encoder.encode(footerText);
+
+                let finalData = new Uint8Array(textBytes1.length + qrBytes.length + textBytes2.length);
+                finalData.set(textBytes1, 0);
+                finalData.set(qrBytes, textBytes1.length);
+                finalData.set(textBytes2, textBytes1.length + qrBytes.length);
                 
                 // Send Data to the Printer Endpoint
-                await device.transferOut(endpointNumber, data);
+                await printDevice.transferOut(printEndpoint, finalData);
                 
-                // Disconnect safely after sending
-                setTimeout(() => {
-                    device.close();
-                }, 1000);
+                // We keep the device open so the next print click works instantly.
 
             } catch (error) {
                 console.error(error);
-                alert("USB (OTG) প্রিন্টার কানেক্ট করা সম্ভব হয়নি বা বাতিল করা হয়েছে! \n(" + error.message + ")\n\nবিকল্প হিসেবে নরমাল সিস্টেম প্রিন্ট ওপেন করা হচ্ছে...");
-                // এরর হলে বা ইউজার ক্যান্সেল করলে বিকল্প হিসেবে সিস্টেম প্রিন্ট ওপেন হবে
+                printDevice = null; // Reset connection status if it fails
+                alert("USB (OTG) প্রিন্টার কানেক্ট করা সম্ভব হয়নি! ক্যাবল চেক করুন। \n(" + error.message + ")\n\nবিকল্প হিসেবে নরমাল সিস্টেম প্রিন্ট ওপেন করা হচ্ছে...");
                 triggerPrint('print-invoice');
             }
         };
@@ -1465,4 +1501,4 @@
 
     </script>
 </body>
-                            </html>
+    </html>

@@ -3,238 +3,217 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pro Medical Bill Scanner</title>
-    <!-- Tesseract.js for OCR -->
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <title>Dynamic Multiple Barcode Printer</title>
+    
+    <!-- JsBarcode Library -->
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+
     <style>
-        :root { --primary: #2c3e50; --accent: #27ae60; --light: #ecf0f1; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--light); margin: 0; padding: 15px; }
-        .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
-        h2 { text-align: center; color: var(--primary); margin-bottom: 20px; }
-        
-        /* Camera & Upload Styles */
-        #camera-container { width: 100%; border-radius: 10px; overflow: hidden; background: #000; position: relative; margin-bottom: 15px; display: none;}
-        video { width: 100%; display: block; }
-        .action-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-        button { padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
-        .btn-cam { background: #3498db; color: white; }
-        .btn-up { background: #9b59b6; color: white; }
-        .btn-capture { background: var(--accent); color: white; width: 100%; margin-top: 10px; }
-        
-        /* Form Styles */
-        .form-group { margin-bottom: 12px; }
-        label { display: block; font-size: 13px; color: #666; margin-bottom: 4px; }
-        input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-size: 15px; background: #f9f9f9; }
-        input:focus { border-color: var(--accent); outline: none; background: #fff; }
+        /* Basic Styling */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
 
-        .nav-btns { display: flex; justify-content: space-between; margin-top: 20px; }
-        .btn-prev { background: #95a5a6; color: white; }
-        .btn-next { background: var(--primary); color: white; }
-        .btn-save { background: #e74c3c; color: white; width: 100%; margin-top: 15px; font-size: 16px; }
+        .controls-container {
+            background-color: white;
+            padding: 20px 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 20px;
+        }
 
-        #status { text-align: center; color: #e67e22; font-weight: bold; margin: 10px 0; font-size: 14px; }
-        canvas { display: none; }
+        h2 {
+            color: #333;
+            margin-top: 0;
+        }
+
+        .input-group {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        input {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+            outline: none;
+        }
+
+        #barcodeInput { width: 200px; }
+        #quantityInput { width: 80px; text-align: center; }
+
+        input:focus { border-color: #007bff; }
+
+        .btn {
+            padding: 10px 20px;
+            font-size: 16px;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.3s;
+            margin: 5px;
+        }
+
+        .btn-add { background-color: #28a745; }
+        .btn-add:hover { background-color: #218838; }
+
+        .btn-print { background-color: #007bff; display: none; }
+        .btn-print:hover { background-color: #0069d9; }
+
+        .btn-clear { background-color: #dc3545; display: none; }
+        .btn-clear:hover { background-color: #c82333; }
+
+        /* বারকোড রাখার জায়গা */
+        #printArea {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            width: 100%;
+            max-width: 900px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-sizing: border-box;
+            min-height: 50px;
+        }
+
+        .barcode-item {
+            text-align: center;
+            background: #fff;
+            padding: 5px;
+            border: 1px dashed #ccc;
+            border-radius: 5px;
+        }
+
+        /* --- Print CSS --- */
+        /* যখন প্রিন্ট ডায়ালগ ওপেন হবে, তখন পেজটি কেমন দেখাবে তার ডিজাইন */
+        @media print {
+            body {
+                background-color: white;
+                margin: 0;
+                padding: 0;
+            }
+            .controls-container {
+                display: none !important; /* ইনপুট এবং বাটন হাইড করা হলো */
+            }
+            #printArea {
+                box-shadow: none;
+                border: none;
+                padding: 0;
+                width: 100%;
+                max-width: 100%;
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: flex-start; /* প্রিন্ট পেজে বাম পাশ থেকে সাজানো থাকবে */
+                gap: 10px;
+            }
+            .barcode-item {
+                border: none; /* প্রিন্টে বর্ডার লাগবে না */
+                page-break-inside: avoid; /* প্রিন্টের সময় বারকোড যেন অর্ধেক কেটে না যায় */
+                margin-bottom: 10px;
+            }
+        }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>Medicine Bill Importer</h2>
-
-    <!-- Camera View -->
-    <div id="camera-container">
-        <video id="video" autoplay playsinline></video>
-        <button class="btn-capture" onclick="captureImage()">📸 Take Photo & Scan</button>
-    </div>
-
-    <!-- Controls -->
-    <div class="action-btns">
-        <button class="btn-cam" onclick="startCamera()">Open Camera</button>
-        <button class="btn-up" onclick="document.getElementById('fileInput').click()">Upload Bill</button>
-    </div>
-    <input type="file" id="fileInput" hidden accept="image/*" onchange="processFile(event)">
-
-    <div id="status">Ready to Scan...</div>
-
-    <!-- Data Entry Form -->
-    <div id="entry-form" style="display: none;">
-        <p id="counter" style="text-align: right; font-weight: bold;">Product 1/1</p>
+    <div class="controls-container">
+        <h2>Multi-Barcode Printer</h2>
         
-        <div class="form-group">
-            <label>Medicine Description</label>
-            <input type="text" id="desc" placeholder="Product Name">
+        <div class="input-group">
+            <input type="text" id="barcodeInput" placeholder="Enter Barcode..." autocomplete="off">
+            <input type="number" id="quantityInput" placeholder="Qty" min="1" value="1">
         </div>
-        <div class="form-group">
-            <label>Batch No</label>
-            <input type="text" id="batch" placeholder="Batch Number">
-        </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-            <div class="form-group"><label>Qty</label><input type="text" id="qty"></div>
-            <div class="form-group"><label>Expiry</label><input type="text" id="exp"></div>
-        </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-            <div class="form-group"><label>MRP</label><input type="text" id="mrp"></div>
-            <div class="form-group"><label>Rate</label><input type="text" id="rate"></div>
-        </div>
-        <div class="form-group">
-            <label>Total Amount</label>
-            <input type="text" id="amount">
-        </div>
-
-        <div class="nav-btns">
-            <button class="btn-prev" onclick="prevItem()">← Previous</button>
-            <button class="btn-next" onclick="nextItem()">Next Item →</button>
-        </div>
-        <button class="btn-save" onclick="saveData()">Save All To Inventory</button>
-    </div>
-</div>
-
-<canvas id="canvas"></canvas>
-
-<script type="module">
-    // Firebase Setup
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-    const firebaseConfig = {
-        apiKey: "AIzaSyD_MJAYCk5JZuOn6_YwsBC86gBKxwC_EKY",
-        authDomain: "cosmatic-a7f73.firebaseapp.com",
-        projectId: "cosmatic-a7f73",
-        storageBucket: "cosmatic-a7f73.firebasestorage.app",
-        messagingSenderId: "693000942896",
-        appId: "1:693000942896:web:5208e137c75e62749c44f5"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    let products = [];
-    let currentIndex = 0;
-    const video = document.getElementById('video');
-    const canvas = document.getElementById('canvas');
-
-    // Camera Logic
-    window.startCamera = async function() {
-        document.getElementById('camera-container').style.display = 'block';
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-            video.srcObject = stream;
-        } catch (err) { alert("Camera access denied!"); }
-    }
-
-    window.captureImage = function() {
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        canvas.getContext('2d').drawImage(video, 0, 0);
-        const dataUrl = canvas.toDataURL('image/jpeg');
-        processOCR(dataUrl);
-        // Stop camera
-        video.srcObject.getTracks().forEach(track => track.stop());
-        document.getElementById('camera-container').style.display = 'none';
-    }
-
-    window.processFile = function(e) {
-        const reader = new FileReader();
-        reader.onload = () => processOCR(reader.result);
-        reader.readAsDataURL(e.target.files[0]);
-    }
-
-    // Pro OCR Logic
-    async function processOCR(imageSrc) {
-        const status = document.getElementById('status');
-        status.innerText = "🔍 Scanning Pro... Please wait...";
         
-        const worker = await Tesseract.createWorker('eng');
-        const { data } = await worker.recognize(imageSrc);
-        await worker.terminate();
+        <div>
+            <button class="btn btn-add" onclick="addBarcodes()">Add Barcodes</button>
+            <button class="btn btn-print" id="printBtn" onclick="openPrintPage()">Print All</button>
+            <button class="btn btn-clear" id="clearBtn" onclick="clearAll()">Clear All</button>
+        </div>
+    </div>
 
-        const lines = data.lines;
-        products = [];
+    <!-- বারকোডগুলো এখানে জমা হবে -->
+    <div id="printArea"></div>
 
-        lines.forEach(line => {
-            const text = line.text.trim();
-            // Regex to find potential medicine rows (Filtering lines with numbers and keywords)
-            if (text.length > 15 && (text.includes('TAB') || text.includes('CAP') || text.includes('PASTE') || text.includes('%'))) {
-                const parts = text.split(/\s+/);
-                
-                // Logic to extract columns based on bill structure
-                products.push({
-                    description: parts.slice(0, 3).join(" "), // Medicine Name
-                    qty: parts.find(p => p.length < 3 && !isNaN(p)) || "1",
-                    batch: parts.find(p => p.length > 4 && /[A-Z0-9]/.test(p)) || "N/A",
-                    exp: text.match(/\d{2}\/\d{2}/) ? text.match(/\d{2}\/\d{2}/)[0] : "00/00",
-                    mrp: parts.find(p => p.includes('.') && parseFloat(p) > 10) || "0",
-                    rate: parts[parts.length - 2] || "0",
-                    amount: parts[parts.length - 1] || "0"
-                });
+    <script>
+        let barcodeIdCounter = 0; 
+
+        function addBarcodes() {
+            let inputVal = document.getElementById("barcodeInput").value.trim();
+            let quantity = parseInt(document.getElementById("quantityInput").value);
+            let printArea = document.getElementById("printArea");
+            let printBtn = document.getElementById("printBtn");
+            let clearBtn = document.getElementById("clearBtn");
+
+            if (inputVal === "" || isNaN(quantity) || quantity <= 0) {
+                alert("Please enter a valid text and quantity!");
+                return;
             }
-        });
 
-        if (products.length > 0) {
-            currentIndex = 0;
-            status.innerText = "✅ Found " + products.length + " items!";
-            showItem();
-            document.getElementById('entry-form').style.display = 'block';
-        } else {
-            status.innerText = "❌ No clear products found. Try again.";
-        }
-    }
+            for (let i = 0; i < quantity; i++) {
+                barcodeIdCounter++;
+                let currentId = "barcode-" + barcodeIdCounter;
 
-    function showItem() {
-        const item = products[currentIndex];
-        document.getElementById('counter').innerText = `Product ${currentIndex + 1} of ${products.length}`;
-        document.getElementById('desc').value = item.description;
-        document.getElementById('qty').value = item.qty;
-        document.getElementById('batch').value = item.batch;
-        document.getElementById('exp').value = item.exp;
-        document.getElementById('mrp').value = item.mrp;
-        document.getElementById('rate').value = item.rate;
-        document.getElementById('amount').value = item.amount;
-    }
+                let barcodeWrapper = document.createElement("div");
+                barcodeWrapper.className = "barcode-item";
 
-    window.nextItem = function() {
-        saveCurrentEdit();
-        if (currentIndex < products.length - 1) {
-            currentIndex++;
-            showItem();
-        } else { alert("This is the last product!"); }
-    }
+                let svgElement = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                svgElement.id = currentId;
 
-    window.prevItem = function() {
-        saveCurrentEdit();
-        if (currentIndex > 0) {
-            currentIndex--;
-            showItem();
-        }
-    }
+                barcodeWrapper.appendChild(svgElement);
+                printArea.appendChild(barcodeWrapper);
 
-    function saveCurrentEdit() {
-        products[currentIndex] = {
-            description: document.getElementById('desc').value,
-            qty: document.getElementById('qty').value,
-            batch: document.getElementById('batch').value,
-            exp: document.getElementById('exp').value,
-            mrp: document.getElementById('mrp').value,
-            rate: document.getElementById('rate').value,
-            amount: document.getElementById('amount').value
-        };
-    }
-
-    window.saveData = async function() {
-        saveCurrentEdit();
-        document.getElementById('status').innerText = "💾 Saving to Firebase...";
-        try {
-            for (const p of products) {
-                await addDoc(collection(db, "medicine_bills"), p);
+                try {
+                    JsBarcode("#" + currentId, inputVal, {
+                        format: "CODE128",
+                        lineColor: "#000000",
+                        width: 1.5,
+                        height: 50,
+                        displayValue: true,
+                        fontSize: 14,
+                        margin: 10
+                    });
+                } catch (error) {
+                    console.error("Error generating barcode:", error);
+                }
             }
-            alert("Success! All medicines added to your inventory.");
-            location.reload();
-        } catch (e) {
-            console.error(e);
-            alert("Error saving data.");
+
+            printBtn.style.display = "inline-block";
+            clearBtn.style.display = "inline-block";
+            
+            document.getElementById("barcodeInput").value = "";
+            document.getElementById("quantityInput").value = "1";
+            document.getElementById("barcodeInput").focus();
         }
-    }
-</script>
+
+        // প্রিন্ট ডায়ালগ ওপেন করার ফাংশন
+        function openPrintPage() {
+            // ব্রাউজারের ডিফল্ট প্রিন্ট ডায়ালগ কল করবে
+            window.print();
+        }
+
+        function clearAll() {
+            document.getElementById("printArea").innerHTML = "";
+            document.getElementById("printBtn").style.display = "none";
+            document.getElementById("clearBtn").style.display = "none";
+            barcodeIdCounter = 0;
+        }
+    </script>
 
 </body>
 </html>

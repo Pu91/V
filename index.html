@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dynamic Multiple Barcode Printer</title>
+    <title>Small Sticker Barcode Printer</title>
     
     <!-- JsBarcode Library -->
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
 
     <style>
-        /* Basic Styling (Screen View) */
+        /* --- Screen View (Only for computer display) --- */
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f7f6;
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f0f2f5;
             margin: 0;
             padding: 20px;
             display: flex;
@@ -22,131 +22,65 @@
 
         .controls-container {
             background-color: white;
-            padding: 20px 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             text-align: center;
             width: 100%;
-            max-width: 600px;
+            max-width: 500px;
             margin-bottom: 20px;
         }
 
-        h2 {
-            color: #333;
-            margin-top: 0;
-        }
-
-        .input-group {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-        }
-
-        input {
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 16px;
-            outline: none;
-        }
-
-        #barcodeInput { width: 200px; }
-        #quantityInput { width: 80px; text-align: center; }
-
-        input:focus { border-color: #007bff; }
-
-        .btn {
-            padding: 10px 20px;
-            font-size: 16px;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: 0.3s;
-            margin: 5px;
-        }
-
+        .input-group { margin-bottom: 10px; }
+        input { padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+        .btn { padding: 8px 15px; color: white; border: none; border-radius: 4px; cursor: pointer; margin: 2px; }
         .btn-add { background-color: #28a745; }
-        .btn-add:hover { background-color: #218838; }
-
         .btn-print { background-color: #007bff; display: none; }
-        .btn-print:hover { background-color: #0069d9; }
-
         .btn-clear { background-color: #dc3545; display: none; }
-        .btn-clear:hover { background-color: #c82333; }
 
+        /* স্ক্রিনে দেখার জন্য স্টাইল */
         #printArea {
             display: flex;
             flex-wrap: wrap;
+            gap: 5px;
             justify-content: center;
-            gap: 15px;
-            width: 100%;
-            max-width: 900px;
             background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-sizing: border-box;
-            min-height: 50px;
-        }
-
-        .barcode-item {
-            text-align: center;
-            background: #fff;
-            padding: 5px;
-            border: 1px dashed #ccc;
+            padding: 10px;
             border-radius: 5px;
+            max-width: 95vw;
         }
 
-        /* --- Print CSS (Updated for Full Page Cover & Any Paper Size) --- */
+        /* --- Print Styling (যেকোনো পেজে ৩ সেমি স্টিকারের মতো সাজাবে) --- */
         @media print {
             @page {
-                /* size: A4; - এটি মুছে দেওয়া হয়েছে যাতে যেকোনো পেজ সাইজ সাপোর্ট করে */
-                margin: 5mm; /* পেজের চারপাশে ৫ মিলিমিটার ফাঁকা জায়গা থাকবে */
+                margin: 5mm; /* পেজের বর্ডার থেকে ৫মিমি গ্যাপ */
             }
-            body {
-                background-color: white;
-                margin: 0;
-                padding: 0;
-            }
-            .controls-container {
-                display: none !important;
-            }
+            body { background: white; padding: 0; margin: 0; }
+            .controls-container { display: none !important; }
             
             #printArea {
-                box-shadow: none;
-                border: none;
-                padding: 0;
-                width: 100%;
-                
-                /* Grid সিস্টেম ব্যবহার করা হয়েছে যাতে পেজের প্রস্থ অনুযায়ী সমানভাবে ছড়ায় */
                 display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(45mm, 1fr)); 
-                gap: 3mm; /* স্টিকারগুলোর মাঝে গ্যাপ */
-                justify-items: center; /* প্রত্যেকটি বারকোড সেলের মাঝখানে থাকবে */
-                align-items: center;
+                /* ৩ সেমি চওড়া কলামের গ্রিড তৈরি করবে */
+                grid-template-columns: repeat(auto-fill, 30mm); 
+                gap: 2mm; /* স্টিকারগুলোর মাঝের গ্যাপ */
+                padding: 0;
+                margin: 0;
             }
 
             .barcode-item {
-                border: none;
-                page-break-inside: avoid; /* প্রিন্টে যেন বারকোড অর্ধেক না কাটে */
-                break-inside: avoid;
-                margin: 0;
-                padding: 2mm 0;
-                width: 100%;
-                max-width: 45mm; /* স্টিকারের সর্বোচ্চ চওড়া */
-                height: 25mm; /* স্টিকারের উচ্চতা */
+                width: 30mm !important;   /* ৩ সেন্টিমিটার চওড়া */
+                height: 18mm !important;  /* ১.৮ সেন্টিমিটার উচ্চতা (বারকোড + টেক্সট ফিট করার জন্য) */
+                border: 0.1mm solid #eee; /* কাটার সুবিধার জন্য হালকা বর্ডার */
                 display: flex;
                 justify-content: center;
                 align-items: center;
                 overflow: hidden;
+                page-break-inside: avoid;
             }
             
-            /* বারকোডকে স্টিকারের সাইজ অনুযায়ী ফিট করা */
-            .barcode-item svg {
+            svg {
                 max-width: 100%;
-                max-height: 100%;
+                height: auto;
             }
         }
     </style>
@@ -154,86 +88,60 @@
 <body>
 
     <div class="controls-container">
-        <h2>Multi-Barcode Printer</h2>
-        
+        <h3>3cm Sticker Barcode Generator</h3>
         <div class="input-group">
-            <input type="text" id="barcodeInput" placeholder="Enter Barcode..." autocomplete="off">
-            <input type="number" id="quantityInput" placeholder="Qty" min="1" value="1">
+            <input type="text" id="barcodeInput" placeholder="Enter Code (e.g. 1001)" autocomplete="off">
+            <input type="number" id="quantityInput" placeholder="Qty" min="1" value="1" style="width: 60px;">
         </div>
-        
-        <div>
-            <button class="btn btn-add" onclick="addBarcodes()">Add Barcodes</button>
-            <button class="btn btn-print" id="printBtn" onclick="openPrintPage()">Print All</button>
-            <button class="btn btn-clear" id="clearBtn" onclick="clearAll()">Clear All</button>
-        </div>
+        <button class="btn btn-add" onclick="addBarcodes()">Add</button>
+        <button class="btn btn-print" id="printBtn" onclick="window.print()">Print Labels</button>
+        <button class="btn btn-clear" id="clearBtn" onclick="clearAll()">Clear</button>
     </div>
 
-    <!-- বারকোডগুলো এখানে জমা হবে -->
     <div id="printArea"></div>
 
     <script>
-        let barcodeIdCounter = 0; 
-
+        let counter = 0;
         function addBarcodes() {
-            let inputVal = document.getElementById("barcodeInput").value.trim();
-            let quantity = parseInt(document.getElementById("quantityInput").value);
-            let printArea = document.getElementById("printArea");
-            let printBtn = document.getElementById("printBtn");
-            let clearBtn = document.getElementById("clearBtn");
+            let val = document.getElementById("barcodeInput").value.trim();
+            let qty = parseInt(document.getElementById("quantityInput").value);
+            let area = document.getElementById("printArea");
 
-            if (inputVal === "" || isNaN(quantity) || quantity <= 0) {
-                alert("Please enter a valid text and quantity!");
-                return;
+            if (!val || qty < 1) return alert("Enter valid data!");
+
+            for (let i = 0; i < qty; i++) {
+                counter++;
+                let id = "b-" + counter;
+                let div = document.createElement("div");
+                div.className = "barcode-item";
+                let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                svg.id = id;
+                div.appendChild(svg);
+                area.appendChild(div);
+
+                JsBarcode("#" + id, val, {
+                    format: "CODE128",
+                    width: 1.0,      // বারের পুরুত্ব ১.০ (খুবই চিকন ও পরিষ্কার হবে)
+                    height: 25,      // বারকোডের উচ্চতা কমানো হয়েছে
+                    displayValue: true,
+                    fontSize: 9,     // টেক্সট ছোট করা হয়েছে
+                    margin: 0,
+                    textMargin: 0
+                });
             }
 
-            for (let i = 0; i < quantity; i++) {
-                barcodeIdCounter++;
-                let currentId = "barcode-" + barcodeIdCounter;
-
-                let barcodeWrapper = document.createElement("div");
-                barcodeWrapper.className = "barcode-item";
-
-                let svgElement = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-                svgElement.id = currentId;
-
-                barcodeWrapper.appendChild(svgElement);
-                printArea.appendChild(barcodeWrapper);
-
-                try {
-                    JsBarcode("#" + currentId, inputVal, {
-                        format: "CODE128",
-                        lineColor: "#000000",
-                        width: 1.2,       
-                        height: 35,       
-                        displayValue: true,
-                        fontSize: 12,     
-                        margin: 2,        
-                        textMargin: 2     
-                    });
-                } catch (error) {
-                    console.error("Error generating barcode:", error);
-                }
-            }
-
-            printBtn.style.display = "inline-block";
-            clearBtn.style.display = "inline-block";
-            
+            document.getElementById("printBtn").style.display = "inline-block";
+            document.getElementById("clearBtn").style.display = "inline-block";
             document.getElementById("barcodeInput").value = "";
-            document.getElementById("quantityInput").value = "1";
             document.getElementById("barcodeInput").focus();
-        }
-
-        function openPrintPage() {
-            window.print();
         }
 
         function clearAll() {
             document.getElementById("printArea").innerHTML = "";
             document.getElementById("printBtn").style.display = "none";
             document.getElementById("clearBtn").style.display = "none";
-            barcodeIdCounter = 0;
+            counter = 0;
         }
     </script>
-
 </body>
 </html>

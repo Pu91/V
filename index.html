@@ -9,7 +9,7 @@
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
 
     <style>
-        /* Basic Styling */
+        /* Basic Styling (Screen View) */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f4f7f6;
@@ -77,7 +77,6 @@
         .btn-clear { background-color: #dc3545; display: none; }
         .btn-clear:hover { background-color: #c82333; }
 
-        /* বারকোড রাখার জায়গা (Screen View) */
         #printArea {
             display: flex;
             flex-wrap: wrap;
@@ -100,12 +99,11 @@
             border-radius: 5px;
         }
 
-        /* --- Print CSS --- */
+        /* --- Print CSS (Updated for Full Page Cover & Any Paper Size) --- */
         @media print {
-            /* পেজের মার্জিন কমানো হয়েছে যাতে ব্রাউজারের ডিফল্ট লেখা না আসে */
             @page {
-                size: A4;
-                margin: 5mm; 
+                /* size: A4; - এটি মুছে দেওয়া হয়েছে যাতে যেকোনো পেজ সাইজ সাপোর্ট করে */
+                margin: 5mm; /* পেজের চারপাশে ৫ মিলিমিটার ফাঁকা জায়গা থাকবে */
             }
             body {
                 background-color: white;
@@ -115,33 +113,37 @@
             .controls-container {
                 display: none !important;
             }
+            
             #printArea {
                 box-shadow: none;
                 border: none;
                 padding: 0;
                 width: 100%;
-                display: flex;
-                flex-wrap: wrap;
-                justify-content: flex-start;
-                align-content: flex-start;
-                gap: 2mm; /* স্টিকারগুলোর মাঝের গ্যাপ */
+                
+                /* Grid সিস্টেম ব্যবহার করা হয়েছে যাতে পেজের প্রস্থ অনুযায়ী সমানভাবে ছড়ায় */
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(45mm, 1fr)); 
+                gap: 3mm; /* স্টিকারগুলোর মাঝে গ্যাপ */
+                justify-items: center; /* প্রত্যেকটি বারকোড সেলের মাঝখানে থাকবে */
+                align-items: center;
             }
+
             .barcode-item {
                 border: none;
-                page-break-inside: avoid;
+                page-break-inside: avoid; /* প্রিন্টে যেন বারকোড অর্ধেক না কাটে */
                 break-inside: avoid;
                 margin: 0;
-                padding: 0;
-                /* প্রফেশনাল স্টিকারের নির্দিষ্ট সাইজ (এখানে ৪ কলামে বসার মত সাইজ দেওয়া হয়েছে) */
-                width: 48mm; 
-                height: 25mm; 
+                padding: 2mm 0;
+                width: 100%;
+                max-width: 45mm; /* স্টিকারের সর্বোচ্চ চওড়া */
+                height: 25mm; /* স্টিকারের উচ্চতা */
                 display: flex;
                 justify-content: center;
                 align-items: center;
                 overflow: hidden;
             }
             
-            /* প্রিন্টের সময় বারকোড যেন বক্সের বাইরে না যায় */
+            /* বারকোডকে স্টিকারের সাইজ অনুযায়ী ফিট করা */
             .barcode-item svg {
                 max-width: 100%;
                 max-height: 100%;
@@ -198,16 +200,15 @@
                 printArea.appendChild(barcodeWrapper);
 
                 try {
-                    // বারকোড জেনারেট করার সেটিংসে পরিবর্তন করা হয়েছে
                     JsBarcode("#" + currentId, inputVal, {
                         format: "CODE128",
                         lineColor: "#000000",
-                        width: 1.2,       // বারের পুরুত্ব কমানো হয়েছে পরিষ্কার বোঝার জন্য
-                        height: 35,       // উচ্চতা কমানো হয়েছে
+                        width: 1.2,       
+                        height: 35,       
                         displayValue: true,
-                        fontSize: 12,     // টেক্সটের সাইজ ছোট করা হয়েছে
-                        margin: 5,        // আশপাশের সাদা অংশ কমানো হয়েছে
-                        textMargin: 2     // বারকোড এবং টেক্সটের মাঝের গ্যাপ
+                        fontSize: 12,     
+                        margin: 2,        
+                        textMargin: 2     
                     });
                 } catch (error) {
                     console.error("Error generating barcode:", error);

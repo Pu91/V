@@ -3,145 +3,869 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Small Sticker Barcode Printer</title>
-    
-    <!-- JsBarcode Library -->
-    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
-
+    <title>Lab Index & Document Builder</title>
     <style>
-        /* --- Screen View (Only for computer display) --- */
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            background-color: #f0f2f5;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+        /* ================= Global CSS ================= */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+        body { background-color: #f4f6f9; color: #333; overflow-x: hidden; }
+
+        /* ================= Header ================= */
+        header {
+            background-color: #2c3e50; color: white; display: flex;
+            justify-content: space-between; align-items: center; padding: 15px 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2); position: sticky; top: 0; z-index: 100;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; }
+        .menu-btn { font-size: 24px; cursor: pointer; background: none; border: none; color: white; }
+        .notification { font-size: 20px; cursor: pointer; margin-right: 15px;}
+        
+        .header-right { display: flex; align-items: center; }
+
+        /* ================= Sidebar ================= */
+        .sidebar {
+            height: 100%; width: 250px; position: fixed; top: 0; left: -250px;
+            background-color: #34495e; color: white; transition: 0.3s ease-in-out;
+            padding-top: 60px; z-index: 1000; box-shadow: 2px 0 5px rgba(0,0,0,0.5);
+        }
+        .close-btn {
+            position: absolute; top: 15px; right: 20px; font-size: 24px;
+            cursor: pointer; background: none; border: none; color: white;
+        }
+        .sidebar a {
+            padding: 15px 20px; text-decoration: none; font-size: 18px;
+            color: white; display: block; transition: 0.2s; border-bottom: 1px solid #2c3e50;
+        }
+        .sidebar a:hover { background-color: #1abc9c; }
+
+        /* ================= Main Container ================= */
+        .container { padding: 20px; max-width: 1000px; margin: auto; }
+        .d-none { display: none !important; }
+
+        /* ================= Dashboard Cards ================= */
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-top: 20px; }
+        .card {
+            background: white; padding: 30px; border-radius: 10px; text-align: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1); cursor: pointer; transition: 0.3s;
+            border-bottom: 5px solid #3498db;
+        }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 6px 12px rgba(0,0,0,0.2); }
+        .card h3 { color: #2c3e50; margin-bottom: 10px; }
+
+        /* ================= Auth Modal (NEW) ================= */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); z-index: 2000; display: flex;
+            justify-content: center; align-items: center;
+        }
+        .modal-content {
+            background: white; padding: 30px; border-radius: 8px;
+            width: 90%; max-width: 400px; position: relative;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        .close-modal { position: absolute; top: 15px; right: 15px; cursor: pointer; font-size: 20px; color: #888; }
+        .modal-input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; }
+
+        /* ================= Form Section ================= */
+        .form-container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #444; }
+        input[type="text"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; }
+        .btn { padding: 10px 20px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; margin-top: 10px;}
+        .btn:hover { background: #2980b9; }
+        .btn-cancel { background: #e74c3c; color: white; }
+        .btn-cancel:hover { background: #c0392b; }
+
+        /* ================= Action Panel ================= */
+        .action-panel { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 30px; }
+        .action-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; flex-wrap: wrap; gap: 10px; }
+        .action-item:last-child { border-bottom: none; }
+        .action-btns button { padding: 6px 12px; margin-left: 5px; border: none; cursor: pointer; border-radius: 4px; color: white; font-weight: bold;}
+        .edit-btn { background: #f39c12; }
+        .delete-btn { background: #e74c3c; }
+
+        /* ================= A4 Page View (MOBILE RESPONSIVE) ================= */
+        .a4-wrapper { text-align: center; margin-bottom: 100px; overflow-x: auto; padding: 10px; }
+        .a4-page {
+            width: 100%; max-width: 210mm; min-height: 297mm; padding: 20mm; margin: 0 auto;
+            background: white; box-shadow: 0 0 10px rgba(0,0,0,0.3); text-align: left;
+            position: relative; overflow: hidden;
         }
 
-        .controls-container {
-            background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            text-align: center;
-            width: 100%;
-            max-width: 500px;
-            margin-bottom: 20px;
+        @media screen and (max-width: 768px) {
+            .a4-page { padding: 10mm; min-height: 150mm; }
+            .a4-wrapper { padding: 0px; margin-bottom: 120px; }
         }
 
-        .input-group { margin-bottom: 10px; }
-        input { padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
-        .btn { padding: 8px 15px; color: white; border: none; border-radius: 4px; cursor: pointer; margin: 2px; }
-        .btn-add { background-color: #28a745; }
-        .btn-print { background-color: #007bff; display: none; }
-        .btn-clear { background-color: #dc3545; display: none; }
+        .a4-title { text-align: center; font-size: 24px; font-weight: bold; text-decoration: underline; margin-bottom: 30px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th { border: 1px solid #000; padding: 10px; background: #f9f9f9; text-align: left; }
+        td { border-left: 1px solid #000; border-right: 1px solid #000; border-bottom: 1px dashed #000; padding: 12px 10px; }
+        table { border-bottom: 1px solid #000; }
+        .print-btn { background: #27ae60; padding: 10px 20px; font-size: 18px; margin-bottom: 20px; color: white; border:none; cursor:pointer; border-radius:5px; width: 100%; max-width: 250px;}
 
-        /* স্ক্রিনে দেখার জন্য স্টাইল */
-        #printArea {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-            justify-content: center;
-            background: white;
-            padding: 10px;
-            border-radius: 5px;
-            max-width: 95vw;
+        /* ================= Document Editor CSS ================= */
+        .editor-toolbar {
+            background: #fff; padding: 10px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;
+            position: fixed; bottom: 0; left: 0; width: 100%; z-index: 1000;
         }
+        .tool-btn { padding: 8px 12px; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; background: white; font-weight: bold; font-size: 14px; transition: 0.2s; }
+        .tool-btn:hover { border-color: #3498db; }
+        .tool-btn.active { background: #3498db; color: white; border-color: #2980b9; }
 
-        /* --- Print Styling (যেকোনো পেজে ৩ সেমি স্টিকারের মতো সাজাবে) --- */
+        .save-doc-btn {
+            background: #e67e22; color: white; padding: 10px 20px; border: none;
+            border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; margin-bottom: 15px;
+        }
+        .save-doc-btn:hover { background: #d35400; }
+
+        .doc-page { cursor: text; min-height: 297mm; padding-bottom: 250px; }
+        .page-number { 
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); 
+            font-weight: bold; color: #666; font-size: 16px; outline: none; border-bottom: 2px dashed transparent;
+            padding: 5px 10px; z-index: 50; text-align: center;
+        }
+        .page-number:focus { border-bottom-color: #3498db; background: rgba(0,0,0,0.05); }
+
+        .ed-wrapper { position: relative; margin-bottom: 5px; padding: 2px; border: 1px dashed transparent; transition: 0.2s; border-radius: 4px; }
+        .ed-wrapper.focused { border-color: #3498db; background: rgba(52, 152, 219, 0.05); z-index: 10;}
+        .block-del-btn { position: absolute; top: -10px; right: -10px; background: #e74c3c; color: white; border: none; font-weight: bold; border-radius: 50%; width: 22px; height: 22px; cursor: pointer; display: none; z-index: 10; font-size: 12px; }
+        .ed-wrapper.focused .block-del-btn { display: block; }
+        [contenteditable="true"]:empty:before { content: attr(placeholder); color: #999; pointer-events: none; display: block; }
+        [contenteditable="true"]:focus { outline: none; }
+        
+        .ed-heading { font-size: 14px; font-weight: bold; text-align: center; width: 100%; }
+        .ed-line { font-size: 12px; line-height: 1.8; text-align: justify; min-height: 22px; width: 100%; word-wrap: break-word; }
+        .ed-point-box { font-size: 12px; display: flex; align-items: flex-start; text-align: justify; }
+        .ed-bullet { margin-right: 8px; font-weight: bold; }
+        .ed-point-title { text-decoration: underline; font-weight: bold; min-width: 30px; }
+        .ed-point-colon { margin: 0 5px; font-weight: bold; }
+        .ed-point-desc { flex-grow: 1; min-height: 22px; }
+
+        .img-wrapper { position: absolute; display: inline-block; cursor: move; width: 150px; height: 100px; min-width: 50px; min-height: 50px; max-width: 100%; background: rgba(0,0,0,0.02); overflow: visible; }
+        .img-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; border: 2px dashed #888; color: #555; cursor: pointer; font-weight: bold; }
+        .doc-img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
+        .resize-handle { position: absolute; bottom: -8px; right: -8px; width: 25px; height: 25px; background: #3498db; border: 2px solid white; border-radius: 50%; cursor: se-resize; display: none; z-index: 20; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .img-wrapper.focused .resize-handle { display: block; }
+
+        .saved-pages-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; margin-top: 20px; }
+        .saved-card { background: #fff; padding: 25px 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer; text-align: center; border: 2px solid transparent; transition: 0.3s; }
+        .saved-card:hover { border-color: #3498db; transform: scale(1.05); }
+        .saved-card h1 { font-size: 50px; margin-bottom: 10px; color: #34495e; }
+        .saved-card p { font-weight: bold; font-size: 16px; color: #444; }
+
+        /* View Only Mode */
+        .view-only-mode .ed-wrapper { border: none !important; background: transparent !important; }
+        .view-only-mode .block-del-btn, .view-only-mode .resize-handle, .view-only-mode .img-placeholder { display: none !important; }
+
+        /* ================= Print Media Query ================= */
         @media print {
-            @page {
-                margin: 5mm; /* পেজের বর্ডার থেকে ৫মিমি গ্যাপ */
-            }
-            body { background: white; padding: 0; margin: 0; }
-            .controls-container { display: none !important; }
+            body * { visibility: hidden; }
+            .section:not(.d-none), .section:not(.d-none) * { visibility: visible; }
+            .section:not(.d-none) { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; }
             
-            #printArea {
-                display: grid;
-                /* ৩ সেমি চওড়া কলামের গ্রিড তৈরি করবে */
-                grid-template-columns: repeat(auto-fill, 30mm); 
-                gap: 2mm; /* স্টিকারগুলোর মাঝের গ্যাপ */
-                padding: 0;
-                margin: 0;
+            .a4-page { 
+                position: relative !important; left: auto !important; top: auto !important;
+                margin: 0 auto !important; padding: 10mm !important; 
+                box-shadow: none !important; border: none !important;
+                page-break-after: always;
             }
-
-            .barcode-item {
-                width: 30mm !important;   /* ৩ সেন্টিমিটার চওড়া */
-                height: 18mm !important;  /* ১.৮ সেন্টিমিটার উচ্চতা (বারকোড + টেক্সট ফিট করার জন্য) */
-                border: 0.1mm solid #eee; /* কাটার সুবিধার জন্য হালকা বর্ডার */
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                overflow: hidden;
-                page-break-inside: avoid;
-            }
+            .a4-page:last-child { page-break-after: auto; }
             
-            svg {
-                max-width: 100%;
-                height: auto;
-            }
+            .no-print, .block-del-btn, .resize-handle, .img-placeholder { display: none !important; }
+            .ed-wrapper { border: none !important; background: transparent !important; }
+            td { border-bottom: 1px solid #000; }
+            [contenteditable="true"]:empty:before { content: ""; } 
         }
     </style>
 </head>
 <body>
 
-    <div class="controls-container">
-        <h3>3cm Sticker Barcode Generator</h3>
-        <div class="input-group">
-            <input type="text" id="barcodeInput" placeholder="Enter Code (e.g. 1001)" autocomplete="off">
-            <input type="number" id="quantityInput" placeholder="Qty" min="1" value="1" style="width: 60px;">
+    <!-- Header -->
+    <header class="no-print">
+        <div class="header-left">
+            <button class="menu-btn" onclick="openSidebar()">☰</button>
+            <h2>Lab Portal</h2>
         </div>
-        <button class="btn btn-add" onclick="addBarcodes()">Add</button>
-        <button class="btn btn-print" id="printBtn" onclick="window.print()">Print Labels</button>
-        <button class="btn btn-clear" id="clearBtn" onclick="clearAll()">Clear</button>
+        
+        <div class="header-right">
+            <span class="notification">🔔</span>
+            <div id="authContainer">
+                <!-- Login/Profile UI injected here -->
+                <button class="btn" style="padding: 5px 15px; margin: 0;" onclick="showAuthModal()">Login</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sidebar -->
+    <div id="sidebar" class="sidebar no-print">
+        <button class="close-btn" onclick="closeSidebar()">✖</button>
+        <a href="#" onclick="showSection('dashboard')">🏠 Dashboard</a>
+        <a href="#" onclick="showSection('formSection')">📝 Add New Index</a>
+        <a href="#" onclick="showSection('viewSection')">📄 View Index</a>
+        <a href="#" onclick="createNewPage()">✍️ Write Experiment</a>
+        <a href="#" onclick="showSection('savedPagesSection')">📑 Saved Pages</a>
+        <a href="#" onclick="showAllPages()">📚 All Page Views</a>
     </div>
 
-    <div id="printArea"></div>
+    <!-- Auth Modal (Login / Signup) -->
+    <div id="authModal" class="modal-overlay d-none no-print">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeAuthModal()">✖</span>
+            
+            <!-- Login Form -->
+            <div id="loginFormContainer">
+                <h2 style="margin-bottom: 15px; color:#2c3e50;">User Login</h2>
+                <input type="email" id="loginEmail" placeholder="Email" class="modal-input">
+                <input type="password" id="loginPassword" placeholder="Password" class="modal-input">
+                <button class="btn" style="width: 100%; margin-top: 0;" onclick="loginUser()">Login</button>
+                <p style="margin-top: 15px; text-align: center;">Don't have an account? <a href="#" onclick="toggleAuth('signup')" style="color:#3498db;">Sign Up</a></p>
+            </div>
 
-    <script>
-        let counter = 0;
-        function addBarcodes() {
-            let val = document.getElementById("barcodeInput").value.trim();
-            let qty = parseInt(document.getElementById("quantityInput").value);
-            let area = document.getElementById("printArea");
+            <!-- Signup Form -->
+            <div id="signupFormContainer" class="d-none">
+                <h2 style="margin-bottom: 15px; color:#2c3e50;">Create Account</h2>
+                <input type="text" id="signupName" placeholder="Full Name" class="modal-input">
+                <input type="text" id="signupPhone" placeholder="Phone Number" class="modal-input">
+                <input type="email" id="signupEmail" placeholder="Email" class="modal-input">
+                <input type="password" id="signupPassword" placeholder="Password" class="modal-input">
+                <button class="btn" style="width: 100%; margin-top: 0;" onclick="signupUser()">Sign Up</button>
+                <p style="margin-top: 15px; text-align: center;">Already have an account? <a href="#" onclick="toggleAuth('login')" style="color:#3498db;">Login</a></p>
+            </div>
+        </div>
+    </div>
 
-            if (!val || qty < 1) return alert("Enter valid data!");
+    <!-- Main Content -->
+    <div class="container">
 
-            for (let i = 0; i < qty; i++) {
-                counter++;
-                let id = "b-" + counter;
-                let div = document.createElement("div");
-                div.className = "barcode-item";
-                let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-                svg.id = id;
-                div.appendChild(svg);
-                area.appendChild(div);
+        <!-- 1. Dashboard Section -->
+        <div id="dashboard" class="section">
+            <h2>Welcome to Dashboard</h2>
+            <div class="dashboard-grid">
+                <div class="card" onclick="showAllPages()">
+                    <h3>📚 All Page Views</h3>
+                    <p>Index & all pages together</p>
+                </div>
+                <div class="card" onclick="showSection('formSection')">
+                    <h3>➕ Create Index Page</h3>
+                    <p>Add new experiment details</p>
+                </div>
+                <div class="card" onclick="showSection('viewSection')">
+                    <h3>👁️ View Index Page</h3>
+                    <p>Manage & Print your A4 Index</p>
+                </div>
+                <div class="card" onclick="createNewPage()">
+                    <h3>✍️ Write Experiment</h3>
+                    <p>Google Docs style editor</p>
+                </div>
+                <div class="card" onclick="showSection('savedPagesSection')">
+                    <h3>📑 Saved Pages</h3>
+                    <p>View & Edit saved documents</p>
+                </div>
+            </div>
+        </div>
 
-                JsBarcode("#" + id, val, {
-                    format: "CODE128",
-                    width: 1.0,      // বারের পুরুত্ব ১.০ (খুবই চিকন ও পরিষ্কার হবে)
-                    height: 25,      // বারকোডের উচ্চতা কমানো হয়েছে
-                    displayValue: true,
-                    fontSize: 9,     // টেক্সট ছোট করা হয়েছে
-                    margin: 0,
-                    textMargin: 0
-                });
+        <!-- 2. Form Section -->
+        <div id="formSection" class="section d-none">
+            <div class="form-container">
+                <h2 id="formTitle">Fill Experiment Details</h2><br>
+                <form id="indexForm">
+                    <div class="form-group">
+                        <label>Serial No. / Experiment No:</label>
+                        <input type="text" id="expNo" list="expList" required>
+                        <datalist id="expList"><option value="Exp - 01"><option value="Exp - 02"><option value="Exp - 03"></datalist>
+                    </div>
+                    <div class="form-group">
+                        <label>Name of the Experiment:</label>
+                        <input type="text" id="expName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Page No:</label>
+                        <input type="text" id="pageNo" required>
+                    </div>
+                    <button type="submit" class="btn" id="saveBtn">Save Experiment</button>
+                    <button type="button" class="btn btn-cancel" onclick="showSection('dashboard')" style="padding: 10px 20px; border-radius: 4px; border:none; cursor:pointer; font-size:16px;">Cancel</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 3. View & Print Section (Index) -->
+        <div id="viewSection" class="section d-none">
+            <div class="action-panel no-print">
+                <h3>🛠️ Manage Index Data</h3>
+                <div id="actionList"></div>
+            </div>
+            <div class="a4-wrapper">
+                <!-- PRINT BUTTON UPDATED TO handlePrint() -->
+                <button class="print-btn no-print" onclick="handlePrint()">🖨️ Print Index Page</button>
+                <div class="a4-page" id="indexPageSource">
+                    <div class="a4-title">INDEX</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 15%;">Exp No.</th>
+                                <th style="width: 65%;">Name of the Experiment</th>
+                                <th style="width: 20%;">Page No.</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Saved Pages Section -->
+        <div id="savedPagesSection" class="section d-none">
+            <h2 style="margin-bottom: 10px; color: #2c3e50;">📑 Your Saved Pages</h2>
+            <div class="saved-pages-grid" id="savedPagesGrid">
+                <!-- Data will load here dynamically -->
+            </div>
+        </div>
+
+        <!-- 5. Document Editor Section -->
+        <div id="editorSection" class="section d-none">
+            <div style="text-align: right;" class="no-print">
+                <button class="save-doc-btn" id="saveDocBtn" onclick="saveDocument()">💾 Save Page</button>
+            </div>
+            <div class="a4-wrapper">
+                <div class="a4-page doc-page" id="editorCanvas" onclick="pasteBlock(event)">
+                    <div class="page-number" id="pageNumberDisplay" contenteditable="true" placeholder="Page No...">Page No: 1</div>
+                </div>
+            </div>
+            <div class="editor-toolbar no-print">
+                <button class="tool-btn" id="tool-heading" onclick="selectTool('heading')">H Heading</button>
+                <button class="tool-btn" id="tool-line" onclick="selectTool('line')">▤ Write Line</button>
+                <button class="tool-btn" id="tool-point" onclick="selectTool('point')">• Point</button>
+                <button class="tool-btn" id="tool-image" onclick="selectTool('image')">📷 Image</button>
+                <!-- PRINT BUTTON UPDATED TO handlePrint() -->
+                <button class="print-btn" style="margin-bottom:0; width:auto; max-width:none; background:#8e44ad; padding: 8px 12px; font-size: 14px;" onclick="handlePrint()">🖨️ Print</button>
+            </div>
+        </div>
+
+        <!-- 6. ALL PAGE VIEWS SECTION -->
+        <div id="allPagesSection" class="section d-none">
+            <div style="text-align: right; margin-bottom: 20px;" class="no-print">
+                <!-- PRINT BUTTON UPDATED TO handlePrint() -->
+                <button class="save-doc-btn" style="background:#27ae60;" onclick="handlePrint()">🖨️ Download Docs / Print All</button>
+            </div>
+            <div class="view-only-mode" id="allPagesContainer" style="display: flex; flex-direction: column; gap: 20px; align-items: center; margin-bottom: 100px;">
+                <!-- Pages will be dynamically loaded here -->
+            </div>
+        </div>
+
+    </div>
+
+    <!-- JavaScript & Firebase Setup -->
+    <script type="module">
+        // Added Auth Methods & Firestore query methods
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, updateDoc, setDoc, query, where } 
+        from "https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCCH1n37W2GPQbNHb6mOFnan7fuzf2L8Eg",
+            authDomain: "education-c2e53.firebaseapp.com",
+            projectId: "education-c2e53",
+            storageBucket: "education-c2e53.firebasestorage.app",
+            messagingSenderId: "611581892773",
+            appId: "1:611581892773:web:8cefe2b560e94da94a954c",
+            measurementId: "G-P8CJHMPLRL"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        
+        const expRef = collection(db, "index_experiments"); 
+        const savedPagesRef = collection(db, "saved_pages");
+
+        // Global State Variables
+        let currentUser = null;
+        let unsubscribeExp = null;
+        let unsubscribePages = null;
+
+        let editMode = false;
+        let currentEditId = null;
+        let currentDocId = null; 
+        let allSavedPages = [];  
+
+        // ================= AUTHENTICATION LOGIC (NEW) =================
+        onAuthStateChanged(auth, (user) => {
+            const authContainer = document.getElementById('authContainer');
+            if (user) {
+                currentUser = user;
+                // Update UI Header
+                authContainer.innerHTML = `
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span style="font-weight:bold; color:white; display:flex; align-items:center; gap:5px;">
+                            👤 ${user.displayName || 'User'}
+                        </span>
+                        <button class="btn-cancel" style="padding:5px 10px; border:none; border-radius:4px; cursor:pointer;" onclick="logoutUser()">Logout</button>
+                    </div>
+                `;
+                loadUserData(user.uid);
+            } else {
+                currentUser = null;
+                // Show Login Button
+                authContainer.innerHTML = `<button class="btn" style="padding: 5px 15px; margin: 0;" onclick="showAuthModal()">Login</button>`;
+                clearUserData();
             }
+        });
 
-            document.getElementById("printBtn").style.display = "inline-block";
-            document.getElementById("clearBtn").style.display = "inline-block";
-            document.getElementById("barcodeInput").value = "";
-            document.getElementById("barcodeInput").focus();
+        window.showAuthModal = () => document.getElementById('authModal').classList.remove('d-none');
+        window.closeAuthModal = () => document.getElementById('authModal').classList.add('d-none');
+        
+        window.toggleAuth = (type) => {
+            if(type === 'signup') {
+                document.getElementById('loginFormContainer').classList.add('d-none');
+                document.getElementById('signupFormContainer').classList.remove('d-none');
+            } else {
+                document.getElementById('loginFormContainer').classList.remove('d-none');
+                document.getElementById('signupFormContainer').classList.add('d-none');
+            }
         }
 
-        function clearAll() {
-            document.getElementById("printArea").innerHTML = "";
-            document.getElementById("printBtn").style.display = "none";
-            document.getElementById("clearBtn").style.display = "none";
-            counter = 0;
+        window.signupUser = async () => {
+            const name = document.getElementById('signupName').value;
+            const phone = document.getElementById('signupPhone').value;
+            const email = document.getElementById('signupEmail').value;
+            const pass = document.getElementById('signupPassword').value;
+
+            if(!name || !email || !pass) return alert("Please fill Name, Email, and Password.");
+
+            try {
+                const userCred = await createUserWithEmailAndPassword(auth, email, pass);
+                await updateProfile(userCred.user, { displayName: name });
+                // Saving extra details in Firestore users collection
+                await setDoc(doc(db, "users", userCred.user.uid), {
+                    name: name,
+                    phone: phone,
+                    email: email
+                });
+                alert("Account Created Successfully!");
+                closeAuthModal();
+            } catch(error) { alert("Error: " + error.message); }
+        }
+
+        window.loginUser = async () => {
+            const email = document.getElementById('loginEmail').value;
+            const pass = document.getElementById('loginPassword').value;
+            if(!email || !pass) return alert("Please enter email and password.");
+            try {
+                await signInWithEmailAndPassword(auth, email, pass);
+                closeAuthModal();
+            } catch(error) { alert("Error: Invalid Email or Password."); }
+        }
+
+        window.logoutUser = async () => {
+            await signOut(auth);
+        }
+
+        // ================= USER DATA FETCHING (ISOLATED) =================
+        function loadUserData(uid) {
+            // Unsubscribe old listeners if exist
+            if(unsubscribeExp) unsubscribeExp();
+            if(unsubscribePages) unsubscribePages();
+
+            // Fetch only current user's Index data
+            const qExp = query(expRef, where("userId", "==", uid));
+            unsubscribeExp = onSnapshot(qExp, (snapshot) => {
+                let dataArray = [];
+                snapshot.forEach(doc => dataArray.push({ id: doc.id, ...doc.data() }));
+                dataArray.sort((a, b) => a.createdAt - b.createdAt); // Sort locally
+
+                const tbody = document.getElementById('tableBody');
+                const actionList = document.getElementById('actionList');
+                tbody.innerHTML = ""; actionList.innerHTML = "";
+
+                dataArray.forEach((data) => {
+                    tbody.innerHTML += `<tr><td><strong>${data.expNo}</strong></td><td>${data.expName}</td><td>${data.pageNo}</td></tr>`;
+                    actionList.innerHTML += `
+                        <div class="action-item">
+                            <span><strong>${data.expNo} :</strong> ${data.expName} (Page: ${data.pageNo})</span>
+                            <div class="action-btns">
+                                <button class="edit-btn" onclick="editExp('${data.id}', '${data.expNo}', '${data.expName}', '${data.pageNo}')">Edit</button>
+                                <button class="delete-btn" onclick="deleteExp('${data.id}')">Delete</button>
+                            </div>
+                        </div>`;
+                });
+            });
+
+            // Fetch only current user's Saved Pages
+            const qPages = query(savedPagesRef, where("userId", "==", uid));
+            unsubscribePages = onSnapshot(qPages, (snapshot) => {
+                allSavedPages = [];
+                const grid = document.getElementById('savedPagesGrid');
+                grid.innerHTML = "";
+
+                snapshot.forEach(doc => allSavedPages.push({ id: doc.id, ...doc.data() }));
+                allSavedPages.sort((a, b) => a.createdAt - b.createdAt);
+
+                if(allSavedPages.length === 0) {
+                    grid.innerHTML = "<p>No pages saved yet. Create one from the editor!</p>";
+                    return;
+                }
+
+                allSavedPages.forEach((data) => {
+                    grid.innerHTML += `
+                        <div class="saved-card" onclick="editSavedPage('${data.id}')">
+                            <h1>📄</h1>
+                            <p>${data.pageTitle}</p>
+                        </div>`;
+                });
+            });
+        }
+
+        function clearUserData() {
+            if(unsubscribeExp) unsubscribeExp();
+            if(unsubscribePages) unsubscribePages();
+            allSavedPages = [];
+            
+            document.getElementById('tableBody').innerHTML = "<tr><td colspan='3' style='text-align:center; padding:20px;'>Please Login to view your Index.</td></tr>";
+            document.getElementById('actionList').innerHTML = "";
+            document.getElementById('savedPagesGrid').innerHTML = "<p style='color:#e74c3c; font-weight:bold;'>Please Login to see your Saved Pages.</p>";
+            document.getElementById('allPagesContainer').innerHTML = "<p style='color:#e74c3c; font-weight:bold;'>Please Login to view all documents.</p>";
+        }
+
+        // ================= GLOBAL RESTRICTION CHECK =================
+        window.handlePrint = () => {
+            if(!currentUser) return alert("Please Login to Download or Print your documents.");
+            window.print();
+        }
+
+        // ================= UI & SIDEBAR FUNCTIONS =================
+        window.openSidebar = () => document.getElementById("sidebar").style.left = "0px";
+        window.closeSidebar = () => document.getElementById("sidebar").style.left = "-250px";
+
+        window.showSection = (sectionId) => {
+            ['dashboard', 'formSection', 'viewSection', 'editorSection', 'savedPagesSection', 'allPagesSection'].forEach(id => {
+                document.getElementById(id).classList.add('d-none');
+            });
+            document.getElementById(sectionId).classList.remove('d-none');
+            closeSidebar();
+        };
+
+        // ================= INDEX FORM LOGIC =================
+        document.getElementById('indexForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if(!currentUser) return alert("Please Login to save experiment details."); // Auth Check
+
+            const btn = document.getElementById('saveBtn');
+            btn.innerText = "Saving..."; btn.disabled = true;
+
+            const expNo = document.getElementById('expNo').value;
+            const expName = document.getElementById('expName').value;
+            const pageNo = document.getElementById('pageNo').value;
+
+            try {
+                if (editMode && currentEditId) {
+                    await updateDoc(doc(db, "index_experiments", currentEditId), { expNo, expName, pageNo });
+                    editMode = false; currentEditId = null;
+                } else {
+                    // Added userId
+                    await addDoc(expRef, { expNo, expName, pageNo, createdAt: Date.now(), userId: currentUser.uid });
+                }
+                document.getElementById('indexForm').reset();
+                window.showSection('viewSection');
+            } catch (error) { console.error(error); alert("Failed to save."); }
+            btn.innerText = "Save Experiment"; btn.disabled = false;
+        });
+
+        window.deleteExp = async (id) => { if (confirm("Delete this?")) await deleteDoc(doc(db, "index_experiments", id)); };
+        window.editExp = (id, expNo, expName, pageNo) => {
+            editMode = true; currentEditId = id;
+            document.getElementById('expNo').value = expNo;
+            document.getElementById('expName').value = expName;
+            document.getElementById('pageNo').value = pageNo;
+            document.getElementById('formTitle').innerText = "Update Detail";
+            window.showSection('formSection');
+        };
+
+        // ================= ALL PAGES VIEW LOGIC =================
+        window.showAllPages = () => {
+            const container = document.getElementById('allPagesContainer');
+            container.innerHTML = ""; 
+            
+            if(!currentUser) {
+                container.innerHTML = "<p style='color:#e74c3c; font-weight:bold;'>Please Login to view your documents.</p>";
+                showSection('allPagesSection');
+                return;
+            }
+
+            const indexPageNode = document.getElementById('indexPageSource').cloneNode(true);
+            indexPageNode.removeAttribute('id'); 
+            container.appendChild(indexPageNode);
+            
+            let sortedPages = [...allSavedPages].sort((a, b) => {
+                let numA = parseInt(a.pageTitle.replace(/\D/g, '')) || 0;
+                let numB = parseInt(b.pageTitle.replace(/\D/g, '')) || 0;
+                return numA - numB;
+            });
+            
+            sortedPages.forEach(page => {
+                let pageDiv = document.createElement('div');
+                pageDiv.className = 'a4-page doc-page';
+                pageDiv.innerHTML = page.htmlContent;
+                
+                pageDiv.querySelectorAll('[contenteditable="true"]').forEach(el => {
+                    el.setAttribute('contenteditable', 'false');
+                });
+                container.appendChild(pageDiv);
+            });
+            
+            showSection('allPagesSection');
+        };
+
+        // ================= DOCUMENT EDITOR LOGIC =================
+        let activeTool = null;
+
+        window.createNewPage = () => {
+            currentDocId = null;
+            document.getElementById('editorCanvas').innerHTML = `<div class="page-number" id="pageNumberDisplay" contenteditable="true" placeholder="Page No...">Page No: 1</div>`;
+            showSection('editorSection');
+        }
+
+        window.editSavedPage = (id) => {
+            currentDocId = id;
+            let pageData = allSavedPages.find(p => p.id === id);
+            if(pageData) {
+                document.getElementById('editorCanvas').innerHTML = pageData.htmlContent;
+                document.querySelectorAll('.img-wrapper').forEach(wrapper => {
+                    makeDraggableAndResizable(wrapper);
+                });
+                showSection('editorSection');
+            }
+        }
+
+        // Save Page Logic (Auth Restricted)
+        window.saveDocument = async () => {
+            if(!currentUser) return alert("Please Login to save the document."); // Auth Check
+
+            const canvas = document.getElementById('editorCanvas');
+            document.querySelectorAll('.ed-wrapper').forEach(w => w.classList.remove('focused'));
+
+            const htmlContent = canvas.innerHTML;
+            const pageNoElem = document.getElementById('pageNumberDisplay');
+            const pageTitle = pageNoElem && pageNoElem.innerText.trim() !== '' ? pageNoElem.innerText : "Untitled Page";
+
+            const btn = document.getElementById('saveDocBtn');
+            btn.innerText = "Saving..."; btn.disabled = true;
+
+            try {
+                if(currentDocId) {
+                    await updateDoc(doc(db, "saved_pages", currentDocId), {
+                        htmlContent: htmlContent,
+                        pageTitle: pageTitle,
+                        updatedAt: Date.now()
+                    });
+                } else {
+                    // Added userId
+                    await addDoc(savedPagesRef, {
+                        htmlContent: htmlContent,
+                        pageTitle: pageTitle,
+                        createdAt: Date.now(),
+                        userId: currentUser.uid 
+                    });
+                }
+                alert("Page Saved Successfully!");
+                showSection('savedPagesSection');
+            } catch(e) { console.error(e); alert("Error saving document."); }
+            
+            btn.innerText = "💾 Save Page"; btn.disabled = false;
+        }
+
+        // Editor Focus/Defocus
+        document.addEventListener('click', (e) => {
+            if(e.target.closest('.ed-wrapper')) {
+                document.querySelectorAll('.ed-wrapper').forEach(w => w.classList.remove('focused'));
+                e.target.closest('.ed-wrapper').classList.add('focused');
+            } else if (!e.target.closest('.editor-toolbar') && !e.target.closest('.save-doc-btn')) {
+                document.querySelectorAll('.ed-wrapper').forEach(w => w.classList.remove('focused'));
+            }
+        });
+
+        // Editor Hotkeys
+        document.addEventListener('keydown', (e) => {
+            let el = e.target;
+            if(el.classList.contains('ed-line')) {
+                if (e.key === 'Enter') {
+                    e.preventDefault(); 
+                    let nextBlock = createLineBlock();
+                    el.closest('.ed-wrapper').after(nextBlock); 
+                    document.querySelectorAll('.ed-wrapper').forEach(w => w.classList.remove('focused'));
+                    nextBlock.classList.add('focused');
+                    nextBlock.querySelector('.ed-line').focus();
+                }
+                if (e.key === 'Backspace' && el.innerText.trim() === '') {
+                    e.preventDefault();
+                    let wrapper = el.closest('.ed-wrapper');
+                    let prev = wrapper.previousElementSibling;
+                    wrapper.remove();
+                    if(prev && prev.querySelector('[contenteditable="true"]')) {
+                        prev.classList.add('focused');
+                        prev.querySelector('[contenteditable="true"]').focus();
+                    }
+                }
+            }
+            if(el.classList.contains('ed-point-desc')) {
+                if(e.key === 'Enter') {
+                    e.preventDefault();
+                    let newLine = createLineBlock();
+                    el.closest('.ed-wrapper').after(newLine);
+                    newLine.classList.add('focused');
+                    newLine.querySelector('.ed-line').focus();
+                }
+            }
+        });
+
+        window.handleImageUpload = (inputElem) => {
+            let file = inputElem.files[0];
+            if(file) {
+                let reader = new FileReader();
+                reader.onload = function(e) {
+                    let wrapper = inputElem.closest('.ed-wrapper');
+                    wrapper.querySelector('.img-placeholder').style.display = 'none';
+                    let img = wrapper.querySelector('.doc-img');
+                    img.src = e.target.result;
+                    img.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        window.selectTool = (toolName) => {
+            document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
+            if(activeTool === toolName) {
+                activeTool = null;
+            } else {
+                activeTool = toolName;
+                document.getElementById('tool-' + toolName).classList.add('active');
+            }
+        };
+
+        window.pasteBlock = (e) => {
+            if(!e.target.classList.contains('doc-page')) return; 
+            if(!activeTool) return; 
+
+            const canvas = document.getElementById('editorCanvas');
+            let block = createBlock(activeTool, e.offsetX, e.offsetY);
+            
+            let pageNum = document.getElementById('pageNumberDisplay');
+            if(pageNum) { canvas.insertBefore(block, pageNum); } 
+            else { canvas.appendChild(block); }
+            
+            block.classList.add('focused');
+            let editable = block.querySelector('[contenteditable="true"]');
+            if(editable) editable.focus();
+
+            activeTool = null;
+            document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+        };
+
+        function wrapHtml(htmlContent, isImage = false, x = 0, y = 0) {
+            let wrapper = document.createElement('div');
+            wrapper.className = 'ed-wrapper' + (isImage ? ' img-wrapper' : '');
+            
+            if(isImage) {
+                wrapper.style.left = x + 'px';
+                wrapper.style.top = y + 'px';
+            }
+
+            wrapper.innerHTML = `
+                <button class="block-del-btn" onclick="this.parentElement.remove()" contenteditable="false" title="Delete">✖</button>
+                ${htmlContent}
+                ${isImage ? '<div class="resize-handle" title="Drag to Resize"></div>' : ''}
+            `;
+
+            if(isImage) makeDraggableAndResizable(wrapper);
+            return wrapper;
+        }
+
+        function createBlock(type, x, y) {
+            if (type === 'heading') return wrapHtml(`<div class="ed-heading" contenteditable="true" placeholder="Enter Heading..."></div>`);
+            else if (type === 'line') return createLineBlock();
+            else if (type === 'point') {
+                let html = `
+                    <div class="ed-point-box">
+                        <span class="ed-bullet">• </span>
+                        <span class="ed-point-title" contenteditable="true" placeholder="Topic"></span>
+                        <span class="ed-point-colon"> :- </span>
+                        <span class="ed-point-desc" contenteditable="true" placeholder="Description..."></span>
+                    </div>`;
+                return wrapHtml(html);
+            }
+            else if (type === 'image') {
+                let html = `
+                    <div class="img-placeholder" onclick="this.nextElementSibling.click()">📷 Add Img</div>
+                    <input type="file" accept="image/*" style="display:none;" onchange="handleImageUpload(this)">
+                    <img class="doc-img" src="" style="display:none;">
+                `;
+                return wrapHtml(html, true, x, y);
+            }
+        }
+
+        function createLineBlock() {
+            return wrapHtml(`<div class="ed-line" contenteditable="true" placeholder="Write line here..."></div>`);
+        }
+
+        // ================= Drag & Corner Resize for Image =================
+        function makeDraggableAndResizable(element) {
+            if(element.dataset.bound) return;
+            element.dataset.bound = "true";
+
+            let isDragging = false, isResizing = false;
+            let startX, startY, initialX, initialY, initialWidth, initialHeight;
+
+            const startAction = (e) => {
+                if(e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || e.target.classList.contains('img-placeholder')) return;
+                
+                let clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                let clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                startX = clientX; 
+                startY = clientY;
+
+                if (e.target.classList.contains('resize-handle')) {
+                    isResizing = true;
+                    let rect = element.getBoundingClientRect();
+                    initialWidth = rect.width;
+                    initialHeight = rect.height;
+                    e.stopPropagation();
+                } else {
+                    isDragging = true;
+                    initialX = element.offsetLeft; 
+                    initialY = element.offsetTop;
+                }
+            };
+
+            const performAction = (e) => {
+                if (!isDragging && !isResizing) return;
+                e.preventDefault(); 
+                
+                let clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                let clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                let dx = clientX - startX; 
+                let dy = clientY - startY;
+
+                if (isResizing) {
+                    element.style.width = Math.max(50, initialWidth + dx) + 'px';
+                    element.style.height = Math.max(50, initialHeight + dy) + 'px';
+                } else if (isDragging) {
+                    element.style.left = (initialX + dx) + 'px';
+                    element.style.top = (initialY + dy) + 'px';
+                }
+            };
+
+            const stopAction = () => { isDragging = false; isResizing = false; };
+
+            element.addEventListener('mousedown', startAction);
+            document.addEventListener('mousemove', performAction);
+            document.addEventListener('mouseup', stopAction);
+
+            element.addEventListener('touchstart', startAction, {passive: false});
+            document.addEventListener('touchmove', performAction, {passive: false});
+            document.addEventListener('touchend', stopAction);
         }
     </script>
 </body>
-</html>
+        </html>

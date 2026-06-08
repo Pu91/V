@@ -3,869 +3,869 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lab Index & Document Builder</title>
+    <title>Premium Multiplayer Tic Tac Toe</title>
+    
+    <!-- CSS Styles -->
     <style>
-        /* ================= Global CSS ================= */
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
-        body { background-color: #f4f6f9; color: #333; overflow-x: hidden; }
-
-        /* ================= Header ================= */
-        header {
-            background-color: #2c3e50; color: white; display: flex;
-            justify-content: space-between; align-items: center; padding: 15px 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2); position: sticky; top: 0; z-index: 100;
+        /* ==========================================
+           Premium Modern UI Design
+           ========================================== */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0f172a; 
+            color: #f8fafc;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
-        .header-left { display: flex; align-items: center; gap: 15px; }
-        .menu-btn { font-size: 24px; cursor: pointer; background: none; border: none; color: white; }
-        .notification { font-size: 20px; cursor: pointer; margin-right: 15px;}
+
+        /* --- Auth Page Styles --- */
+        #auth-page {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 100;
+        }
+        .auth-container {
+            background: #1e293b; padding: 30px; border-radius: 15px;
+            width: 350px; box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            border: 1px solid #334155; text-align: center;
+        }
+        .auth-container h2 { color: #38bdf8; margin-bottom: 20px; }
+        .input-group { margin-bottom: 15px; text-align: left; }
+        .input-group label { display: block; font-size: 0.9rem; color: #94a3b8; margin-bottom: 5px; }
+        .input-group input {
+            width: 100%; padding: 10px; border: 1px solid #334155;
+            border-radius: 6px; background: #0f172a; color: white; outline: none;
+        }
+        .input-group input:focus { border-color: #38bdf8; }
+        .auth-btn {
+            width: 100%; padding: 12px; background: #4f46e5; color: white;
+            border: none; border-radius: 6px; font-weight: bold; cursor: pointer;
+            transition: 0.3s; margin-top: 10px;
+        }
+        .auth-btn:hover { background: #4338ca; }
+        .auth-toggle { margin-top: 15px; font-size: 0.9rem; color: #94a3b8; cursor: pointer; }
+        .auth-toggle span { color: #38bdf8; font-weight: bold; }
+
+        /* --- Profile Page Styles --- */
+        #profile-page {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: #0f172a; display: none; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 90;
+        }
+        .profile-container {
+            background: #1e293b; padding: 40px; border-radius: 20px; width: 320px;
+            text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.5); border: 1px solid #334155;
+        }
+        .profile-container img {
+            width: 120px; height: 120px; border-radius: 50%; object-fit: cover;
+            border: 4px solid #38bdf8; margin-bottom: 15px;
+        }
+        .profile-container h2 { color: #f8fafc; margin-bottom: 5px; }
+        .profile-container p { color: #94a3b8; font-size: 0.9rem; margin-bottom: 20px; }
+        .profile-coins {
+            font-size: 1.5rem; color: #fbbf24; font-weight: bold; background: #0f172a;
+            padding: 10px; border-radius: 10px; border: 1px solid #334155;
+        }
+
+        /* --- Claim Popup Styles --- */
+        #coin-popup {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); display: none; justify-content: center;
+            align-items: center; z-index: 200;
+        }
+        .popup-content {
+            background: linear-gradient(135deg, #1e293b, #0f172a); padding: 30px;
+            border-radius: 15px; text-align: center; border: 2px solid #fbbf24;
+            box-shadow: 0 0 30px rgba(251, 191, 36, 0.4); animation: popIn 0.5s ease-out;
+        }
+        @keyframes popIn { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        .popup-content h2 { color: #fbbf24; font-size: 2rem; margin-bottom: 10px; }
+        .popup-content p { color: #e2e8f0; font-size: 1.1rem; margin-bottom: 20px; }
+        .claim-btn {
+            background: #fbbf24; color: #0f172a; padding: 12px 25px; border: none;
+            border-radius: 8px; font-weight: bold; font-size: 1.1rem; cursor: pointer; transition: 0.3s;
+        }
+        .claim-btn:hover { background: #f59e0b; transform: scale(1.05); }
+
+        /* --- Home Page Styles --- */
+        #home-page { display: none; flex-direction: column; height: 100vh; justify-content: space-between; }
+        .header { display: flex; justify-content: space-between; align-items: center; background: #1e293b; padding: 15px 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.4); border-bottom: 1px solid #334155; }
+        .profile-info { display: flex; align-items: center; gap: 10px; font-size: 1.1rem; font-weight: 600; color: #e2e8f0; cursor: pointer; transition: 0.3s;}
+        .profile-info:hover { opacity: 0.8; }
+        .profile-info img { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid #38bdf8; }
+        .coin-info { display: flex; align-items: center; gap: 8px; background: #334155; padding: 6px 16px; border-radius: 20px; color: #fbbf24; font-weight: 700; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); }
+        .menu-container { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 20px; padding: 20px; }
+        .game-card { width: 100%; max-width: 350px; padding: 22px; border-radius: 16px; text-align: center; font-size: 1.3rem; font-weight: 700; cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.3); transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; gap: 15px; border: 1px solid rgba(255,255,255,0.1); }
+        .game-card:hover { transform: translateY(-5px) scale(1.02); box-shadow: 0 15px 25px rgba(0,0,0,0.5); }
+        .card-online { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; }
+        .card-offline { background: linear-gradient(135deg, #059669, #10b981); color: white; }
+        .card-computer { background: linear-gradient(135deg, #ea580c, #f97316); color: white; }
+        .footer { display: flex; justify-content: space-around; align-items: center; background: #1e293b; padding: 12px 0; border-top: 1px solid #334155; }
+        .footer-item { display: flex; flex-direction: column; align-items: center; font-size: 0.85rem; color: #94a3b8; cursor: pointer; transition: color 0.3s; font-weight: 500; }
+        .footer-item:hover { color: #38bdf8; }
+        .footer-item span { font-size: 1.6rem; margin-bottom: 4px; }
+
+        /* --- Difficulty Page Styles --- */
+        #difficulty-page {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: #0f172a; display: none; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 60;
+        }
+
+        /* --- VS Page Styles --- */
+        #vs-page {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: #0f172a; display: none; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 50;
+        }
+        .vs-container { display: flex; align-items: center; gap: 30px; }
+        .player-card { text-align: center; }
+        .player-card img {
+            width: 100px; height: 100px; border-radius: 50%; border: 4px solid #38bdf8;
+            object-fit: cover; margin-bottom: 10px; background: #334155;
+        }
+        .player-card h3 { color: #f8fafc; }
+        .vs-text { font-size: 3rem; font-weight: bold; color: #e11d48; text-shadow: 0 0 10px rgba(225, 29, 72, 0.5); }
+        .loading-text { margin-top: 30px; color: #94a3b8; font-size: 1.2rem; }
+
+        /* --- Game Page Styles --- */
+        #game-page { display: none; flex-direction: column; justify-content: center; align-items: center; height: 100vh; position: relative; }
+        .back-btn { position: absolute; top: 20px; left: 20px; background: #334155; color: #f8fafc; border: 1px solid #475569; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; z-index: 10;}
         
-        .header-right { display: flex; align-items: center; }
-
-        /* ================= Sidebar ================= */
-        .sidebar {
-            height: 100%; width: 250px; position: fixed; top: 0; left: -250px;
-            background-color: #34495e; color: white; transition: 0.3s ease-in-out;
-            padding-top: 60px; z-index: 1000; box-shadow: 2px 0 5px rgba(0,0,0,0.5);
-        }
-        .close-btn {
-            position: absolute; top: 15px; right: 20px; font-size: 24px;
-            cursor: pointer; background: none; border: none; color: white;
-        }
-        .sidebar a {
-            padding: 15px 20px; text-decoration: none; font-size: 18px;
-            color: white; display: block; transition: 0.2s; border-bottom: 1px solid #2c3e50;
-        }
-        .sidebar a:hover { background-color: #1abc9c; }
-
-        /* ================= Main Container ================= */
-        .container { padding: 20px; max-width: 1000px; margin: auto; }
-        .d-none { display: none !important; }
-
-        /* ================= Dashboard Cards ================= */
-        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-top: 20px; }
-        .card {
-            background: white; padding: 30px; border-radius: 10px; text-align: center;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1); cursor: pointer; transition: 0.3s;
-            border-bottom: 5px solid #3498db;
-        }
-        .card:hover { transform: translateY(-5px); box-shadow: 0 6px 12px rgba(0,0,0,0.2); }
-        .card h3 { color: #2c3e50; margin-bottom: 10px; }
-
-        /* ================= Auth Modal (NEW) ================= */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6); z-index: 2000; display: flex;
-            justify-content: center; align-items: center;
-        }
-        .modal-content {
-            background: white; padding: 30px; border-radius: 8px;
-            width: 90%; max-width: 400px; position: relative;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        }
-        .close-modal { position: absolute; top: 15px; right: 15px; cursor: pointer; font-size: 20px; color: #888; }
-        .modal-input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; }
-
-        /* ================= Form Section ================= */
-        .form-container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; color: #444; }
-        input[type="text"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; }
-        .btn { padding: 10px 20px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; margin-top: 10px;}
-        .btn:hover { background: #2980b9; }
-        .btn-cancel { background: #e74c3c; color: white; }
-        .btn-cancel:hover { background: #c0392b; }
-
-        /* ================= Action Panel ================= */
-        .action-panel { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 30px; }
-        .action-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; flex-wrap: wrap; gap: 10px; }
-        .action-item:last-child { border-bottom: none; }
-        .action-btns button { padding: 6px 12px; margin-left: 5px; border: none; cursor: pointer; border-radius: 4px; color: white; font-weight: bold;}
-        .edit-btn { background: #f39c12; }
-        .delete-btn { background: #e74c3c; }
-
-        /* ================= A4 Page View (MOBILE RESPONSIVE) ================= */
-        .a4-wrapper { text-align: center; margin-bottom: 100px; overflow-x: auto; padding: 10px; }
-        .a4-page {
-            width: 100%; max-width: 210mm; min-height: 297mm; padding: 20mm; margin: 0 auto;
-            background: white; box-shadow: 0 0 10px rgba(0,0,0,0.3); text-align: left;
-            position: relative; overflow: hidden;
-        }
-
-        @media screen and (max-width: 768px) {
-            .a4-page { padding: 10mm; min-height: 150mm; }
-            .a4-wrapper { padding: 0px; margin-bottom: 120px; }
-        }
-
-        .a4-title { text-align: center; font-size: 24px; font-weight: bold; text-decoration: underline; margin-bottom: 30px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th { border: 1px solid #000; padding: 10px; background: #f9f9f9; text-align: left; }
-        td { border-left: 1px solid #000; border-right: 1px solid #000; border-bottom: 1px dashed #000; padding: 12px 10px; }
-        table { border-bottom: 1px solid #000; }
-        .print-btn { background: #27ae60; padding: 10px 20px; font-size: 18px; margin-bottom: 20px; color: white; border:none; cursor:pointer; border-radius:5px; width: 100%; max-width: 250px;}
-
-        /* ================= Document Editor CSS ================= */
-        .editor-toolbar {
-            background: #fff; padding: 10px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-            display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;
-            position: fixed; bottom: 0; left: 0; width: 100%; z-index: 1000;
-        }
-        .tool-btn { padding: 8px 12px; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; background: white; font-weight: bold; font-size: 14px; transition: 0.2s; }
-        .tool-btn:hover { border-color: #3498db; }
-        .tool-btn.active { background: #3498db; color: white; border-color: #2980b9; }
-
-        .save-doc-btn {
-            background: #e67e22; color: white; padding: 10px 20px; border: none;
-            border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; margin-bottom: 15px;
-        }
-        .save-doc-btn:hover { background: #d35400; }
-
-        .doc-page { cursor: text; min-height: 297mm; padding-bottom: 250px; }
-        .page-number { 
-            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); 
-            font-weight: bold; color: #666; font-size: 16px; outline: none; border-bottom: 2px dashed transparent;
-            padding: 5px 10px; z-index: 50; text-align: center;
-        }
-        .page-number:focus { border-bottom-color: #3498db; background: rgba(0,0,0,0.05); }
-
-        .ed-wrapper { position: relative; margin-bottom: 5px; padding: 2px; border: 1px dashed transparent; transition: 0.2s; border-radius: 4px; }
-        .ed-wrapper.focused { border-color: #3498db; background: rgba(52, 152, 219, 0.05); z-index: 10;}
-        .block-del-btn { position: absolute; top: -10px; right: -10px; background: #e74c3c; color: white; border: none; font-weight: bold; border-radius: 50%; width: 22px; height: 22px; cursor: pointer; display: none; z-index: 10; font-size: 12px; }
-        .ed-wrapper.focused .block-del-btn { display: block; }
-        [contenteditable="true"]:empty:before { content: attr(placeholder); color: #999; pointer-events: none; display: block; }
-        [contenteditable="true"]:focus { outline: none; }
+        .game-container { text-align: center; background: #1e293b; padding: 25px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); width: 360px; border: 1px solid #334155; }
         
-        .ed-heading { font-size: 14px; font-weight: bold; text-align: center; width: 100%; }
-        .ed-line { font-size: 12px; line-height: 1.8; text-align: justify; min-height: 22px; width: 100%; word-wrap: break-word; }
-        .ed-point-box { font-size: 12px; display: flex; align-items: flex-start; text-align: justify; }
-        .ed-bullet { margin-right: 8px; font-weight: bold; }
-        .ed-point-title { text-decoration: underline; font-weight: bold; min-width: 30px; }
-        .ed-point-colon { margin: 0 5px; font-weight: bold; }
-        .ed-point-desc { flex-grow: 1; min-height: 22px; }
+        /* VS Header inside Game Board */
+        .game-vs-header {
+            display: flex; justify-content: space-between; align-items: center;
+            background: #334155; padding: 10px 15px; border-radius: 12px;
+            margin-bottom: 15px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .game-vs-header .p-box { display: flex; flex-direction: column; align-items: center; width: 80px; }
+        .game-vs-header img { width: 45px; height: 45px; border-radius: 50%; border: 2px solid #38bdf8; object-fit: cover; background: #1e293b; }
+        .game-vs-header span { font-size: 0.8rem; font-weight: bold; margin-top: 5px; color: #f8fafc; text-align: center; line-height: 1.1; }
+        .game-vs-header .vs-badge { color: #e11d48; font-weight: bold; font-size: 1.3rem; text-shadow: 0 0 5px rgba(225, 29, 72, 0.5); }
 
-        .img-wrapper { position: absolute; display: inline-block; cursor: move; width: 150px; height: 100px; min-width: 50px; min-height: 50px; max-width: 100%; background: rgba(0,0,0,0.02); overflow: visible; }
-        .img-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; border: 2px dashed #888; color: #555; cursor: pointer; font-weight: bold; }
-        .doc-img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
-        .resize-handle { position: absolute; bottom: -8px; right: -8px; width: 25px; height: 25px; background: #3498db; border: 2px solid white; border-radius: 50%; cursor: se-resize; display: none; z-index: 20; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-        .img-wrapper.focused .resize-handle { display: block; }
+        #status { font-size: 1.1rem; margin-bottom: 15px; color: #38bdf8; font-weight: 600; }
+        .board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+        .cell { width: 90px; height: 90px; background: #334155; border-radius: 12px; display: flex; justify-content: center; align-items: center; font-size: 3rem; font-weight: bold; cursor: pointer; box-shadow: inset 0 2px 5px rgba(0,0,0,0.2); transition: 0.2s;}
+        .cell:hover { background: #475569; }
+        .chat-box { margin-top: 10px; background: #0f172a; padding: 12px; border-radius: 12px; border: 1px solid #334155; }
+        #messages { height: 110px; overflow-y: auto; text-align: left; font-size: 0.9rem; margin-bottom: 10px; padding: 10px; background: #1e293b; border-radius: 8px; }
+        #messages p { margin: 5px 0; color: #cbd5e1; }
+        .sender-name { color: #38bdf8; font-weight: bold; }
+        .input-area { display: flex; gap: 8px; }
+        input { flex: 1; padding: 10px; border: 1px solid #334155; border-radius: 6px; background: #1e293b; color: white; outline: none; }
+        #send-btn { padding: 10px 18px; border: none; background: #4f46e5; color: white; font-weight: bold; cursor: pointer; border-radius: 6px; }
+        #reset-btn { padding: 12px 20px; background: #e11d48; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
 
-        .saved-pages-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; margin-top: 20px; }
-        .saved-card { background: #fff; padding: 25px 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer; text-align: center; border: 2px solid transparent; transition: 0.3s; }
-        .saved-card:hover { border-color: #3498db; transform: scale(1.05); }
-        .saved-card h1 { font-size: 50px; margin-bottom: 10px; color: #34495e; }
-        .saved-card p { font-weight: bold; font-size: 16px; color: #444; }
-
-        /* View Only Mode */
-        .view-only-mode .ed-wrapper { border: none !important; background: transparent !important; }
-        .view-only-mode .block-del-btn, .view-only-mode .resize-handle, .view-only-mode .img-placeholder { display: none !important; }
-
-        /* ================= Print Media Query ================= */
-        @media print {
-            body * { visibility: hidden; }
-            .section:not(.d-none), .section:not(.d-none) * { visibility: visible; }
-            .section:not(.d-none) { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; }
-            
-            .a4-page { 
-                position: relative !important; left: auto !important; top: auto !important;
-                margin: 0 auto !important; padding: 10mm !important; 
-                box-shadow: none !important; border: none !important;
-                page-break-after: always;
-            }
-            .a4-page:last-child { page-break-after: auto; }
-            
-            .no-print, .block-del-btn, .resize-handle, .img-placeholder { display: none !important; }
-            .ed-wrapper { border: none !important; background: transparent !important; }
-            td { border-bottom: 1px solid #000; }
-            [contenteditable="true"]:empty:before { content: ""; } 
+        /* --- Confetti Animation --- */
+        .confetti {
+            position: absolute; top: -10px; width: 10px; height: 20px; z-index: 9999;
+            pointer-events: none; animation: fall linear forwards;
+        }
+        @keyframes fall {
+            to { transform: translateY(110vh) rotate(720deg); }
         }
     </style>
 </head>
 <body>
 
-    <!-- Header -->
-    <header class="no-print">
-        <div class="header-left">
-            <button class="menu-btn" onclick="openSidebar()">☰</button>
-            <h2>Lab Portal</h2>
+    <!-- ================== AUTH PAGE ================== -->
+    <div id="auth-page">
+        <div class="auth-container" id="login-container">
+            <h2>Login to Play</h2>
+            <div class="input-group"><label>Email</label><input type="email" id="login-email" placeholder="Enter email"></div>
+            <div class="input-group"><label>Password</label><input type="password" id="login-password" placeholder="Enter password"></div>
+            <button class="auth-btn" onclick="loginUser()">Login</button>
+            <p class="auth-toggle" onclick="toggleAuth()">Don't have an account? <span>Register</span></p>
         </div>
-        
-        <div class="header-right">
-            <span class="notification">🔔</span>
-            <div id="authContainer">
-                <!-- Login/Profile UI injected here -->
-                <button class="btn" style="padding: 5px 15px; margin: 0;" onclick="showAuthModal()">Login</button>
-            </div>
-        </div>
-    </header>
 
-    <!-- Sidebar -->
-    <div id="sidebar" class="sidebar no-print">
-        <button class="close-btn" onclick="closeSidebar()">✖</button>
-        <a href="#" onclick="showSection('dashboard')">🏠 Dashboard</a>
-        <a href="#" onclick="showSection('formSection')">📝 Add New Index</a>
-        <a href="#" onclick="showSection('viewSection')">📄 View Index</a>
-        <a href="#" onclick="createNewPage()">✍️ Write Experiment</a>
-        <a href="#" onclick="showSection('savedPagesSection')">📑 Saved Pages</a>
-        <a href="#" onclick="showAllPages()">📚 All Page Views</a>
+        <div class="auth-container" id="register-container" style="display: none;">
+            <h2>Create Account</h2>
+            <div class="input-group"><label>Name</label><input type="text" id="reg-name" placeholder="Your Name"></div>
+            <div class="input-group"><label>Photo URL (Optional)</label><input type="text" id="reg-photo" placeholder="Image Link"></div>
+            <div class="input-group"><label>Email</label><input type="email" id="reg-email" placeholder="Enter email"></div>
+            <div class="input-group"><label>Password</label><input type="password" id="reg-password" placeholder="Create password"></div>
+            <button class="auth-btn" onclick="registerUser()">Register</button>
+            <p class="auth-toggle" onclick="toggleAuth()">Already have an account? <span>Login</span></p>
+        </div>
     </div>
 
-    <!-- Auth Modal (Login / Signup) -->
-    <div id="authModal" class="modal-overlay d-none no-print">
-        <div class="modal-content">
-            <span class="close-modal" onclick="closeAuthModal()">✖</span>
+    <!-- ================== PROFILE PAGE ================== -->
+    <div id="profile-page">
+        <button class="back-btn" onclick="closeProfile()">⬅ Back</button>
+        <div class="profile-container">
+            <img id="prof-page-img" src="" alt="Profile">
+            <h2 id="prof-page-name">User Name</h2>
+            <p id="prof-page-email">user@email.com</p>
+            <div class="profile-coins">🪙 <span id="prof-page-coins">0</span></div>
+        </div>
+    </div>
+
+    <!-- ================== COIN CLAIM POPUP ================== -->
+    <div id="coin-popup">
+        <div class="popup-content">
+            <h2>🎉 You Won! 🎉</h2>
+            <p>Claim your reward</p>
+            <button class="claim-btn" onclick="claimCoins()">🪙 Claim 50 Coins</button>
+        </div>
+    </div>
+
+    <!-- ================== HOME PAGE ================== -->
+    <div id="home-page">
+        <div class="header">
+            <!-- Profile Info with Online Status inside -->
+            <div class="profile-info" onclick="showProfile()">
+                <img id="header-photo" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="Profile">
+                <div style="display: flex; flex-direction: column; justify-content: center;">
+                    <span id="header-name" style="line-height: 1.1;">Player</span>
+                    <span style="font-size: 0.75rem; color: #4ade80; display: flex; align-items: center; gap: 4px; margin-top: 4px;">
+                        <div style="width: 8px; height: 8px; background-color: #4ade80; border-radius: 50%;"></div> Online
+                    </span>
+                </div>
+            </div>
+            <div class="coin-info"><span>🪙</span> <span id="header-coins">0</span></div>
+        </div>
+
+        <div class="menu-container">
+            <div class="game-card card-online" onclick="startOnlinePlay()">
+                <span>🌐</span> Online Play
+            </div>
+            <div class="game-card card-offline" onclick="startOfflinePlay()">
+                <span>👥</span> Offline Play
+            </div>
+            <div class="game-card card-computer" onclick="showDifficultyPage()">
+                <span>🤖</span> Computer Play
+            </div>
+        </div>
+
+        <div class="footer">
+            <div class="footer-item"><span>🏠</span> Home</div>
+            <div class="footer-item" onclick="logoutUser()"><span>🚪</span> Logout</div>
+            <div class="footer-item"><span>🪙</span> Coins</div>
+            <div class="footer-item"><span>🌟</span> Level</div>
+        </div>
+    </div>
+
+    <!-- ================== DIFFICULTY PAGE ================== -->
+    <div id="difficulty-page">
+        <button class="back-btn" onclick="goHome()">⬅ Back</button>
+        <h2 style="color: #38bdf8; margin-bottom: 20px; font-size: 2rem;">Select Difficulty</h2>
+        <div class="menu-container" style="padding: 0; flex:none;">
+            <div class="game-card" style="background: linear-gradient(135deg, #22c55e, #16a34a); color: white;" onclick="startGameWithDifficulty('Easy')">😁 Easy Mode</div>
+            <div class="game-card" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white;" onclick="startGameWithDifficulty('Medium')">😎 Medium Mode</div>
+            <div class="game-card" style="background: linear-gradient(135deg, #ef4444, #dc2626); color: white;" onclick="startGameWithDifficulty('Hard')">😈 Hard Mode</div>
+        </div>
+    </div>
+
+    <!-- ================== VS PAGE ================== -->
+    <div id="vs-page">
+        <div class="vs-container">
+            <div class="player-card">
+                <img id="vs-p1-img" src="" alt="P1">
+                <h3 id="vs-p1-name">Loading...</h3>
+            </div>
+            <div class="vs-text">VS</div>
+            <div class="player-card">
+                <img id="vs-p2-img" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="P2">
+                <h3 id="vs-p2-name">Waiting...</h3>
+            </div>
+        </div>
+        <div class="loading-text" id="vs-loading-msg">Searching for opponent...</div>
+    </div>
+
+    <!-- ================== GAME PAGE ================== -->
+    <div id="game-page">
+        <button class="back-btn" onclick="goHome()">⬅ Quit</button>
+
+        <div class="game-container">
             
-            <!-- Login Form -->
-            <div id="loginFormContainer">
-                <h2 style="margin-bottom: 15px; color:#2c3e50;">User Login</h2>
-                <input type="email" id="loginEmail" placeholder="Email" class="modal-input">
-                <input type="password" id="loginPassword" placeholder="Password" class="modal-input">
-                <button class="btn" style="width: 100%; margin-top: 0;" onclick="loginUser()">Login</button>
-                <p style="margin-top: 15px; text-align: center;">Don't have an account? <a href="#" onclick="toggleAuth('signup')" style="color:#3498db;">Sign Up</a></p>
+            <!-- VS Header Card -->
+            <div class="game-vs-header">
+                <div class="p-box">
+                    <img id="game-p1-img" src="https://cdn-icons-png.flaticon.com/512/149/149071.png">
+                    <span id="game-p1-name">Player X</span>
+                </div>
+                <div class="vs-badge">VS</div>
+                <div class="p-box">
+                    <img id="game-p2-img" src="https://cdn-icons-png.flaticon.com/512/149/149071.png">
+                    <span id="game-p2-name">Player O</span>
+                </div>
             </div>
 
-            <!-- Signup Form -->
-            <div id="signupFormContainer" class="d-none">
-                <h2 style="margin-bottom: 15px; color:#2c3e50;">Create Account</h2>
-                <input type="text" id="signupName" placeholder="Full Name" class="modal-input">
-                <input type="text" id="signupPhone" placeholder="Phone Number" class="modal-input">
-                <input type="email" id="signupEmail" placeholder="Email" class="modal-input">
-                <input type="password" id="signupPassword" placeholder="Password" class="modal-input">
-                <button class="btn" style="width: 100%; margin-top: 0;" onclick="signupUser()">Sign Up</button>
-                <p style="margin-top: 15px; text-align: center;">Already have an account? <a href="#" onclick="toggleAuth('login')" style="color:#3498db;">Login</a></p>
+            <div id="status">Connecting to game...</div>
+
+            <div class="board" id="board">
+                <div class="cell" data-index="0"></div><div class="cell" data-index="1"></div><div class="cell" data-index="2"></div>
+                <div class="cell" data-index="3"></div><div class="cell" data-index="4"></div><div class="cell" data-index="5"></div>
+                <div class="cell" data-index="6"></div><div class="cell" data-index="7"></div><div class="cell" data-index="8"></div>
+            </div>
+
+            <button id="reset-btn">Restart Game</button>
+
+            <!-- Chat Box (Hide in Offline/Computer Mode) -->
+            <div class="chat-box" id="chat-section">
+                <div id="messages"></div>
+                <div class="input-area">
+                    <input type="text" id="msg-input" placeholder="Type a message...">
+                    <button id="send-btn">Send</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Main Content -->
-    <div class="container">
-
-        <!-- 1. Dashboard Section -->
-        <div id="dashboard" class="section">
-            <h2>Welcome to Dashboard</h2>
-            <div class="dashboard-grid">
-                <div class="card" onclick="showAllPages()">
-                    <h3>📚 All Page Views</h3>
-                    <p>Index & all pages together</p>
-                </div>
-                <div class="card" onclick="showSection('formSection')">
-                    <h3>➕ Create Index Page</h3>
-                    <p>Add new experiment details</p>
-                </div>
-                <div class="card" onclick="showSection('viewSection')">
-                    <h3>👁️ View Index Page</h3>
-                    <p>Manage & Print your A4 Index</p>
-                </div>
-                <div class="card" onclick="createNewPage()">
-                    <h3>✍️ Write Experiment</h3>
-                    <p>Google Docs style editor</p>
-                </div>
-                <div class="card" onclick="showSection('savedPagesSection')">
-                    <h3>📑 Saved Pages</h3>
-                    <p>View & Edit saved documents</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- 2. Form Section -->
-        <div id="formSection" class="section d-none">
-            <div class="form-container">
-                <h2 id="formTitle">Fill Experiment Details</h2><br>
-                <form id="indexForm">
-                    <div class="form-group">
-                        <label>Serial No. / Experiment No:</label>
-                        <input type="text" id="expNo" list="expList" required>
-                        <datalist id="expList"><option value="Exp - 01"><option value="Exp - 02"><option value="Exp - 03"></datalist>
-                    </div>
-                    <div class="form-group">
-                        <label>Name of the Experiment:</label>
-                        <input type="text" id="expName" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Page No:</label>
-                        <input type="text" id="pageNo" required>
-                    </div>
-                    <button type="submit" class="btn" id="saveBtn">Save Experiment</button>
-                    <button type="button" class="btn btn-cancel" onclick="showSection('dashboard')" style="padding: 10px 20px; border-radius: 4px; border:none; cursor:pointer; font-size:16px;">Cancel</button>
-                </form>
-            </div>
-        </div>
-
-        <!-- 3. View & Print Section (Index) -->
-        <div id="viewSection" class="section d-none">
-            <div class="action-panel no-print">
-                <h3>🛠️ Manage Index Data</h3>
-                <div id="actionList"></div>
-            </div>
-            <div class="a4-wrapper">
-                <!-- PRINT BUTTON UPDATED TO handlePrint() -->
-                <button class="print-btn no-print" onclick="handlePrint()">🖨️ Print Index Page</button>
-                <div class="a4-page" id="indexPageSource">
-                    <div class="a4-title">INDEX</div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th style="width: 15%;">Exp No.</th>
-                                <th style="width: 65%;">Name of the Experiment</th>
-                                <th style="width: 20%;">Page No.</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tableBody"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- 4. Saved Pages Section -->
-        <div id="savedPagesSection" class="section d-none">
-            <h2 style="margin-bottom: 10px; color: #2c3e50;">📑 Your Saved Pages</h2>
-            <div class="saved-pages-grid" id="savedPagesGrid">
-                <!-- Data will load here dynamically -->
-            </div>
-        </div>
-
-        <!-- 5. Document Editor Section -->
-        <div id="editorSection" class="section d-none">
-            <div style="text-align: right;" class="no-print">
-                <button class="save-doc-btn" id="saveDocBtn" onclick="saveDocument()">💾 Save Page</button>
-            </div>
-            <div class="a4-wrapper">
-                <div class="a4-page doc-page" id="editorCanvas" onclick="pasteBlock(event)">
-                    <div class="page-number" id="pageNumberDisplay" contenteditable="true" placeholder="Page No...">Page No: 1</div>
-                </div>
-            </div>
-            <div class="editor-toolbar no-print">
-                <button class="tool-btn" id="tool-heading" onclick="selectTool('heading')">H Heading</button>
-                <button class="tool-btn" id="tool-line" onclick="selectTool('line')">▤ Write Line</button>
-                <button class="tool-btn" id="tool-point" onclick="selectTool('point')">• Point</button>
-                <button class="tool-btn" id="tool-image" onclick="selectTool('image')">📷 Image</button>
-                <!-- PRINT BUTTON UPDATED TO handlePrint() -->
-                <button class="print-btn" style="margin-bottom:0; width:auto; max-width:none; background:#8e44ad; padding: 8px 12px; font-size: 14px;" onclick="handlePrint()">🖨️ Print</button>
-            </div>
-        </div>
-
-        <!-- 6. ALL PAGE VIEWS SECTION -->
-        <div id="allPagesSection" class="section d-none">
-            <div style="text-align: right; margin-bottom: 20px;" class="no-print">
-                <!-- PRINT BUTTON UPDATED TO handlePrint() -->
-                <button class="save-doc-btn" style="background:#27ae60;" onclick="handlePrint()">🖨️ Download Docs / Print All</button>
-            </div>
-            <div class="view-only-mode" id="allPagesContainer" style="display: flex; flex-direction: column; gap: 20px; align-items: center; margin-bottom: 100px;">
-                <!-- Pages will be dynamically loaded here -->
-            </div>
-        </div>
-
-    </div>
-
-    <!-- JavaScript & Firebase Setup -->
+    <!-- ==============================================
+         FIREBASE FIRESTORE & AUTH LOGIC (v10 Modular)
+         ============================================== -->
     <script type="module">
-        // Added Auth Methods & Firestore query methods
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, updateDoc, setDoc, query, where } 
-        from "https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, setDoc, getDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
         const firebaseConfig = {
-            apiKey: "AIzaSyCCH1n37W2GPQbNHb6mOFnan7fuzf2L8Eg",
-            authDomain: "education-c2e53.firebaseapp.com",
-            projectId: "education-c2e53",
-            storageBucket: "education-c2e53.firebasestorage.app",
-            messagingSenderId: "611581892773",
-            appId: "1:611581892773:web:8cefe2b560e94da94a954c",
-            measurementId: "G-P8CJHMPLRL"
+            apiKey: "AIzaSyAFUAATQoR0Kidzm9665tILTMNArFgKO9k",
+            authDomain: "school-websit-9c152.firebaseapp.com",
+            projectId: "school-websit-9c152"
         };
 
         const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
         const db = getFirestore(app);
-        
-        const expRef = collection(db, "index_experiments"); 
-        const savedPagesRef = collection(db, "saved_pages");
+        const auth = getAuth(app);
 
-        // Global State Variables
         let currentUser = null;
-        let unsubscribeExp = null;
-        let unsubscribePages = null;
+        let userCoins = 0;
+        const defaultDp = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+        const robotDp = "https://cdn-icons-png.flaticon.com/512/4712/4712035.png";
 
-        let editMode = false;
-        let currentEditId = null;
-        let currentDocId = null; 
-        let allSavedPages = [];  
+        // Global Game Modes
+        let currentMode = "online"; 
+        let aiDifficulty = "Easy";
+        let localBoard = Array(9).fill("");
+        let localTurn = "X";
+        let isLocalGameActive = false;
 
-        // ================= AUTHENTICATION LOGIC (NEW) =================
-        onAuthStateChanged(auth, (user) => {
-            const authContainer = document.getElementById('authContainer');
+        // UI Toggles
+        window.toggleAuth = () => {
+            const login = document.getElementById('login-container');
+            const reg = document.getElementById('register-container');
+            if(login.style.display === 'none') { login.style.display = 'block'; reg.style.display = 'none'; }
+            else { login.style.display = 'none'; reg.style.display = 'block'; }
+        };
+
+        // --- HARDWARE BACK BUTTON (HASH ROUTER) ---
+        window.addEventListener('hashchange', () => {
+            if (!currentUser) return; 
+            const hash = window.location.hash;
+            if (hash === '' || hash === '#home') {
+                // Hide all sub-pages, show Home
+                document.getElementById('profile-page').style.display = 'none';
+                document.getElementById('difficulty-page').style.display = 'none';
+                document.getElementById('game-page').style.display = 'none';
+                document.getElementById('vs-page').style.display = 'none';
+                document.getElementById('coin-popup').style.display = 'none';
+                
+                document.getElementById('home-page').style.display = 'flex';
+                if(vsListener) { vsListener(); vsListener = null; }
+                isLocalGameActive = false;
+            }
+        });
+
+        window.showProfile = () => {
+            if(!currentUser) return;
+            window.location.hash = 'profile';
+            document.getElementById('profile-page').style.display = 'flex';
+            document.getElementById('prof-page-img').src = currentUser.photoURL || defaultDp;
+            document.getElementById('prof-page-name').innerText = currentUser.displayName;
+            document.getElementById('prof-page-email').innerText = currentUser.email;
+            document.getElementById('prof-page-coins').innerText = userCoins;
+        };
+
+        window.closeProfile = () => {
+            if (window.location.hash === '#profile') history.back();
+            else document.getElementById('profile-page').style.display = 'none';
+        };
+
+        window.showDifficultyPage = () => {
+            window.location.hash = 'difficulty';
+            document.getElementById('home-page').style.display = 'none';
+            document.getElementById('difficulty-page').style.display = 'flex';
+        };
+
+        function updateGameVSHeader(p1Name, p1Img, p2Name, p2Img) {
+            document.getElementById('game-p1-name').innerText = p1Name;
+            document.getElementById('game-p1-img').src = p1Img || defaultDp;
+            document.getElementById('game-p2-name').innerText = p2Name;
+            document.getElementById('game-p2-img').src = p2Img || defaultDp;
+        }
+
+        function triggerWinAnimation() {
+            const colors = ['#fbbf24', '#38bdf8', '#4f46e5', '#e11d48', '#22c55e'];
+            for(let i=0; i<80; i++) {
+                let conf = document.createElement('div');
+                conf.className = 'confetti';
+                conf.style.left = Math.random() * 100 + 'vw';
+                conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                conf.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                conf.style.animationDelay = Math.random() * 1 + 's';
+                document.body.appendChild(conf);
+                setTimeout(() => conf.remove(), 5000);
+            }
+        }
+
+        function updateCoinDisplay() {
+            document.getElementById('header-coins').innerText = userCoins;
+            document.getElementById('prof-page-coins').innerText = userCoins;
+        }
+
+        // --- AUTH LOGIC & COIN FETCHING ---
+        onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUser = user;
-                // Update UI Header
-                authContainer.innerHTML = `
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <span style="font-weight:bold; color:white; display:flex; align-items:center; gap:5px;">
-                            👤 ${user.displayName || 'User'}
-                        </span>
-                        <button class="btn-cancel" style="padding:5px 10px; border:none; border-radius:4px; cursor:pointer;" onclick="logoutUser()">Logout</button>
-                    </div>
-                `;
-                loadUserData(user.uid);
+                
+                // Set default hash state
+                if (window.location.hash !== '#home') {
+                    history.replaceState(null, null, '#home');
+                }
+
+                try {
+                    const userDocRef = doc(db, "users", user.uid);
+                    const userDoc = await getDoc(userDocRef);
+                    if(userDoc.exists()) {
+                        userCoins = userDoc.data().coins || 0;
+                    } else {
+                        await setDoc(userDocRef, { coins: 0, name: user.displayName }, { merge: true });
+                        userCoins = 0;
+                    }
+                } catch(error) { userCoins = 0; }
+                
+                updateCoinDisplay();
+
+                document.getElementById('auth-page').style.display = 'none';
+                document.getElementById('home-page').style.display = 'flex';
+                document.getElementById('header-name').innerText = user.displayName || "Gamer";
+                document.getElementById('header-photo').src = user.photoURL || defaultDp;
             } else {
                 currentUser = null;
-                // Show Login Button
-                authContainer.innerHTML = `<button class="btn" style="padding: 5px 15px; margin: 0;" onclick="showAuthModal()">Login</button>`;
-                clearUserData();
+                document.getElementById('auth-page').style.display = 'flex';
+                document.getElementById('home-page').style.display = 'none';
+                document.getElementById('game-page').style.display = 'none';
+                document.getElementById('vs-page').style.display = 'none';
+                document.getElementById('difficulty-page').style.display = 'none';
+                document.getElementById('profile-page').style.display = 'none';
             }
         });
 
-        window.showAuthModal = () => document.getElementById('authModal').classList.remove('d-none');
-        window.closeAuthModal = () => document.getElementById('authModal').classList.add('d-none');
-        
-        window.toggleAuth = (type) => {
-            if(type === 'signup') {
-                document.getElementById('loginFormContainer').classList.add('d-none');
-                document.getElementById('signupFormContainer').classList.remove('d-none');
-            } else {
-                document.getElementById('loginFormContainer').classList.remove('d-none');
-                document.getElementById('signupFormContainer').classList.add('d-none');
-            }
-        }
-
-        window.signupUser = async () => {
-            const name = document.getElementById('signupName').value;
-            const phone = document.getElementById('signupPhone').value;
-            const email = document.getElementById('signupEmail').value;
-            const pass = document.getElementById('signupPassword').value;
-
-            if(!name || !email || !pass) return alert("Please fill Name, Email, and Password.");
-
+        window.registerUser = async () => {
+            const email = document.getElementById('reg-email').value;
+            const pass = document.getElementById('reg-password').value;
+            const name = document.getElementById('reg-name').value;
+            const photo = document.getElementById('reg-photo').value;
+            if(!email || !pass || !name) return alert("Please fill details!");
             try {
-                const userCred = await createUserWithEmailAndPassword(auth, email, pass);
-                await updateProfile(userCred.user, { displayName: name });
-                // Saving extra details in Firestore users collection
-                await setDoc(doc(db, "users", userCred.user.uid), {
-                    name: name,
-                    phone: phone,
-                    email: email
-                });
-                alert("Account Created Successfully!");
-                closeAuthModal();
-            } catch(error) { alert("Error: " + error.message); }
-        }
+                const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+                await updateProfile(userCredential.user, { displayName: name, photoURL: photo || defaultDp });
+                try { await setDoc(doc(db, "users", userCredential.user.uid), { coins: 0, name: name }, { merge: true }); } catch(e){}
+                window.location.reload(); 
+            } catch(e) { alert(e.message); }
+        };
 
         window.loginUser = async () => {
-            const email = document.getElementById('loginEmail').value;
-            const pass = document.getElementById('loginPassword').value;
-            if(!email || !pass) return alert("Please enter email and password.");
-            try {
-                await signInWithEmailAndPassword(auth, email, pass);
-                closeAuthModal();
-            } catch(error) { alert("Error: Invalid Email or Password."); }
-        }
-
-        window.logoutUser = async () => {
-            await signOut(auth);
-        }
-
-        // ================= USER DATA FETCHING (ISOLATED) =================
-        function loadUserData(uid) {
-            // Unsubscribe old listeners if exist
-            if(unsubscribeExp) unsubscribeExp();
-            if(unsubscribePages) unsubscribePages();
-
-            // Fetch only current user's Index data
-            const qExp = query(expRef, where("userId", "==", uid));
-            unsubscribeExp = onSnapshot(qExp, (snapshot) => {
-                let dataArray = [];
-                snapshot.forEach(doc => dataArray.push({ id: doc.id, ...doc.data() }));
-                dataArray.sort((a, b) => a.createdAt - b.createdAt); // Sort locally
-
-                const tbody = document.getElementById('tableBody');
-                const actionList = document.getElementById('actionList');
-                tbody.innerHTML = ""; actionList.innerHTML = "";
-
-                dataArray.forEach((data) => {
-                    tbody.innerHTML += `<tr><td><strong>${data.expNo}</strong></td><td>${data.expName}</td><td>${data.pageNo}</td></tr>`;
-                    actionList.innerHTML += `
-                        <div class="action-item">
-                            <span><strong>${data.expNo} :</strong> ${data.expName} (Page: ${data.pageNo})</span>
-                            <div class="action-btns">
-                                <button class="edit-btn" onclick="editExp('${data.id}', '${data.expNo}', '${data.expName}', '${data.pageNo}')">Edit</button>
-                                <button class="delete-btn" onclick="deleteExp('${data.id}')">Delete</button>
-                            </div>
-                        </div>`;
-                });
-            });
-
-            // Fetch only current user's Saved Pages
-            const qPages = query(savedPagesRef, where("userId", "==", uid));
-            unsubscribePages = onSnapshot(qPages, (snapshot) => {
-                allSavedPages = [];
-                const grid = document.getElementById('savedPagesGrid');
-                grid.innerHTML = "";
-
-                snapshot.forEach(doc => allSavedPages.push({ id: doc.id, ...doc.data() }));
-                allSavedPages.sort((a, b) => a.createdAt - b.createdAt);
-
-                if(allSavedPages.length === 0) {
-                    grid.innerHTML = "<p>No pages saved yet. Create one from the editor!</p>";
-                    return;
-                }
-
-                allSavedPages.forEach((data) => {
-                    grid.innerHTML += `
-                        <div class="saved-card" onclick="editSavedPage('${data.id}')">
-                            <h1>📄</h1>
-                            <p>${data.pageTitle}</p>
-                        </div>`;
-                });
-            });
-        }
-
-        function clearUserData() {
-            if(unsubscribeExp) unsubscribeExp();
-            if(unsubscribePages) unsubscribePages();
-            allSavedPages = [];
-            
-            document.getElementById('tableBody').innerHTML = "<tr><td colspan='3' style='text-align:center; padding:20px;'>Please Login to view your Index.</td></tr>";
-            document.getElementById('actionList').innerHTML = "";
-            document.getElementById('savedPagesGrid').innerHTML = "<p style='color:#e74c3c; font-weight:bold;'>Please Login to see your Saved Pages.</p>";
-            document.getElementById('allPagesContainer').innerHTML = "<p style='color:#e74c3c; font-weight:bold;'>Please Login to view all documents.</p>";
-        }
-
-        // ================= GLOBAL RESTRICTION CHECK =================
-        window.handlePrint = () => {
-            if(!currentUser) return alert("Please Login to Download or Print your documents.");
-            window.print();
-        }
-
-        // ================= UI & SIDEBAR FUNCTIONS =================
-        window.openSidebar = () => document.getElementById("sidebar").style.left = "0px";
-        window.closeSidebar = () => document.getElementById("sidebar").style.left = "-250px";
-
-        window.showSection = (sectionId) => {
-            ['dashboard', 'formSection', 'viewSection', 'editorSection', 'savedPagesSection', 'allPagesSection'].forEach(id => {
-                document.getElementById(id).classList.add('d-none');
-            });
-            document.getElementById(sectionId).classList.remove('d-none');
-            closeSidebar();
+            const email = document.getElementById('login-email').value;
+            const pass = document.getElementById('login-password').value;
+            if(!email || !pass) return alert("Enter email and password");
+            try { await signInWithEmailAndPassword(auth, email, pass); } catch(e) { alert("Login Failed: " + e.message); }
         };
 
-        // ================= INDEX FORM LOGIC =================
-        document.getElementById('indexForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            if(!currentUser) return alert("Please Login to save experiment details."); // Auth Check
+        window.logoutUser = () => signOut(auth);
 
-            const btn = document.getElementById('saveBtn');
-            btn.innerText = "Saving..."; btn.disabled = true;
-
-            const expNo = document.getElementById('expNo').value;
-            const expName = document.getElementById('expName').value;
-            const pageNo = document.getElementById('pageNo').value;
-
-            try {
-                if (editMode && currentEditId) {
-                    await updateDoc(doc(db, "index_experiments", currentEditId), { expNo, expName, pageNo });
-                    editMode = false; currentEditId = null;
-                } else {
-                    // Added userId
-                    await addDoc(expRef, { expNo, expName, pageNo, createdAt: Date.now(), userId: currentUser.uid });
-                }
-                document.getElementById('indexForm').reset();
-                window.showSection('viewSection');
-            } catch (error) { console.error(error); alert("Failed to save."); }
-            btn.innerText = "Save Experiment"; btn.disabled = false;
-        });
-
-        window.deleteExp = async (id) => { if (confirm("Delete this?")) await deleteDoc(doc(db, "index_experiments", id)); };
-        window.editExp = (id, expNo, expName, pageNo) => {
-            editMode = true; currentEditId = id;
-            document.getElementById('expNo').value = expNo;
-            document.getElementById('expName').value = expName;
-            document.getElementById('pageNo').value = pageNo;
-            document.getElementById('formTitle').innerText = "Update Detail";
-            window.showSection('formSection');
-        };
-
-        // ================= ALL PAGES VIEW LOGIC =================
-        window.showAllPages = () => {
-            const container = document.getElementById('allPagesContainer');
-            container.innerHTML = ""; 
-            
-            if(!currentUser) {
-                container.innerHTML = "<p style='color:#e74c3c; font-weight:bold;'>Please Login to view your documents.</p>";
-                showSection('allPagesSection');
-                return;
+        window.goHome = () => {
+            if (window.location.hash !== '#home' && window.location.hash !== '') {
+                history.back(); // This triggers hashchange properly
+            } else {
+                document.getElementById('game-page').style.display = 'none';
+                document.getElementById('difficulty-page').style.display = 'none';
+                document.getElementById('home-page').style.display = 'flex';
+                if(vsListener) { vsListener(); vsListener = null;}
+                isLocalGameActive = false;
             }
-
-            const indexPageNode = document.getElementById('indexPageSource').cloneNode(true);
-            indexPageNode.removeAttribute('id'); 
-            container.appendChild(indexPageNode);
-            
-            let sortedPages = [...allSavedPages].sort((a, b) => {
-                let numA = parseInt(a.pageTitle.replace(/\D/g, '')) || 0;
-                let numB = parseInt(b.pageTitle.replace(/\D/g, '')) || 0;
-                return numA - numB;
-            });
-            
-            sortedPages.forEach(page => {
-                let pageDiv = document.createElement('div');
-                pageDiv.className = 'a4-page doc-page';
-                pageDiv.innerHTML = page.htmlContent;
-                
-                pageDiv.querySelectorAll('[contenteditable="true"]').forEach(el => {
-                    el.setAttribute('contenteditable', 'false');
-                });
-                container.appendChild(pageDiv);
-            });
-            
-            showSection('allPagesSection');
         };
 
-        // ================= DOCUMENT EDITOR LOGIC =================
-        let activeTool = null;
+        window.claimCoins = async () => {
+            if(!currentUser) return;
+            userCoins += 50;
+            updateCoinDisplay();
+            document.getElementById('coin-popup').style.display = 'none';
+            try { await setDoc(doc(db, "users", currentUser.uid), { coins: userCoins }, { merge: true }); } catch(e){}
+        };
 
-        window.createNewPage = () => {
-            currentDocId = null;
-            document.getElementById('editorCanvas').innerHTML = `<div class="page-number" id="pageNumberDisplay" contenteditable="true" placeholder="Page No...">Page No: 1</div>`;
-            showSection('editorSection');
+        function checkWinner(board) {
+            const ways = [[0,1,2], [3,4,5], [6,7,8], [0,3,6], [1,4,7], [2,5,8], [0,4,8], [2,4,6]];
+            for (let c of ways) {
+                if (board[c[0]] && board[c[0]] === board[c[1]] && board[c[0]] === board[c[2]]) return board[c[0]]; 
+            }
+            return board.includes("") ? null : "Draw";
         }
 
-        window.editSavedPage = (id) => {
-            currentDocId = id;
-            let pageData = allSavedPages.find(p => p.id === id);
-            if(pageData) {
-                document.getElementById('editorCanvas').innerHTML = pageData.htmlContent;
-                document.querySelectorAll('.img-wrapper').forEach(wrapper => {
-                    makeDraggableAndResizable(wrapper);
-                });
-                showSection('editorSection');
+
+        // ==============================================
+        //           1. COMPUTER PLAY LOGIC (Difficulty)
+        // ==============================================
+        window.startGameWithDifficulty = (diff) => {
+            aiDifficulty = diff;
+            currentMode = "computer";
+            localBoard = Array(9).fill("");
+            localTurn = "X"; 
+            isLocalGameActive = true;
+            
+            history.replaceState(null, null, '#game'); // Replace difficulty URL with game URL
+            document.getElementById('difficulty-page').style.display = 'none';
+            document.getElementById('game-page').style.display = 'flex';
+            document.getElementById('chat-section').style.display = 'none'; 
+            
+            updateGameVSHeader(currentUser.displayName, currentUser.photoURL, `Computer (${diff})`, robotDp);
+            document.getElementById('status').innerText = "🟢 Your Turn (X)";
+            renderLocalBoard();
+        };
+
+        function minimax(board, isMaximizing) {
+            let result = checkWinner(board);
+            if (result === "O") return 10;
+            if (result === "X") return -10;
+            if (result === "Draw") return 0;
+
+            if (isMaximizing) {
+                let bestScore = -Infinity;
+                for (let i = 0; i < 9; i++) {
+                    if (board[i] === "") {
+                        board[i] = "O";
+                        let score = minimax(board, false);
+                        board[i] = "";
+                        bestScore = Math.max(score, bestScore);
+                    }
+                }
+                return bestScore;
+            } else {
+                let bestScore = Infinity;
+                for (let i = 0; i < 9; i++) {
+                    if (board[i] === "") {
+                        board[i] = "X";
+                        let score = minimax(board, true);
+                        board[i] = "";
+                        bestScore = Math.min(score, bestScore);
+                    }
+                }
+                return bestScore;
             }
         }
 
-        // Save Page Logic (Auth Restricted)
-        window.saveDocument = async () => {
-            if(!currentUser) return alert("Please Login to save the document."); // Auth Check
-
-            const canvas = document.getElementById('editorCanvas');
-            document.querySelectorAll('.ed-wrapper').forEach(w => w.classList.remove('focused'));
-
-            const htmlContent = canvas.innerHTML;
-            const pageNoElem = document.getElementById('pageNumberDisplay');
-            const pageTitle = pageNoElem && pageNoElem.innerText.trim() !== '' ? pageNoElem.innerText : "Untitled Page";
-
-            const btn = document.getElementById('saveDocBtn');
-            btn.innerText = "Saving..."; btn.disabled = true;
-
-            try {
-                if(currentDocId) {
-                    await updateDoc(doc(db, "saved_pages", currentDocId), {
-                        htmlContent: htmlContent,
-                        pageTitle: pageTitle,
-                        updatedAt: Date.now()
-                    });
-                } else {
-                    // Added userId
-                    await addDoc(savedPagesRef, {
-                        htmlContent: htmlContent,
-                        pageTitle: pageTitle,
-                        createdAt: Date.now(),
-                        userId: currentUser.uid 
-                    });
-                }
-                alert("Page Saved Successfully!");
-                showSection('savedPagesSection');
-            } catch(e) { console.error(e); alert("Error saving document."); }
-            
-            btn.innerText = "💾 Save Page"; btn.disabled = false;
-        }
-
-        // Editor Focus/Defocus
-        document.addEventListener('click', (e) => {
-            if(e.target.closest('.ed-wrapper')) {
-                document.querySelectorAll('.ed-wrapper').forEach(w => w.classList.remove('focused'));
-                e.target.closest('.ed-wrapper').classList.add('focused');
-            } else if (!e.target.closest('.editor-toolbar') && !e.target.closest('.save-doc-btn')) {
-                document.querySelectorAll('.ed-wrapper').forEach(w => w.classList.remove('focused'));
-            }
-        });
-
-        // Editor Hotkeys
-        document.addEventListener('keydown', (e) => {
-            let el = e.target;
-            if(el.classList.contains('ed-line')) {
-                if (e.key === 'Enter') {
-                    e.preventDefault(); 
-                    let nextBlock = createLineBlock();
-                    el.closest('.ed-wrapper').after(nextBlock); 
-                    document.querySelectorAll('.ed-wrapper').forEach(w => w.classList.remove('focused'));
-                    nextBlock.classList.add('focused');
-                    nextBlock.querySelector('.ed-line').focus();
-                }
-                if (e.key === 'Backspace' && el.innerText.trim() === '') {
-                    e.preventDefault();
-                    let wrapper = el.closest('.ed-wrapper');
-                    let prev = wrapper.previousElementSibling;
-                    wrapper.remove();
-                    if(prev && prev.querySelector('[contenteditable="true"]')) {
-                        prev.classList.add('focused');
-                        prev.querySelector('[contenteditable="true"]').focus();
+        function getHardMove() {
+            let bestScore = -Infinity;
+            let move = -1;
+            for (let i = 0; i < 9; i++) {
+                if (localBoard[i] === "") {
+                    localBoard[i] = "O";
+                    let score = minimax(localBoard, false);
+                    localBoard[i] = "";
+                    if (score > bestScore) {
+                        bestScore = score;
+                        move = i;
                     }
                 }
             }
-            if(el.classList.contains('ed-point-desc')) {
-                if(e.key === 'Enter') {
-                    e.preventDefault();
-                    let newLine = createLineBlock();
-                    el.closest('.ed-wrapper').after(newLine);
-                    newLine.classList.add('focused');
-                    newLine.querySelector('.ed-line').focus();
+            return move;
+        }
+
+        function getMediumMove() {
+            for (let i = 0; i < 9; i++) {
+                if (localBoard[i] === "") {
+                    localBoard[i] = "O";
+                    if(checkWinner(localBoard) === "O") { localBoard[i] = ""; return i; }
+                    localBoard[i] = "";
                 }
             }
+            for (let i = 0; i < 9; i++) {
+                if (localBoard[i] === "") {
+                    localBoard[i] = "X";
+                    if(checkWinner(localBoard) === "X") { localBoard[i] = ""; return i; }
+                    localBoard[i] = "";
+                }
+            }
+            let emptySpots = localBoard.map((v, i) => v === "" ? i : null).filter(v => v !== null);
+            return emptySpots[Math.floor(Math.random() * emptySpots.length)];
+        }
+
+        function makeComputerMove() {
+            let moveIdx = -1;
+            if(aiDifficulty === 'Hard') moveIdx = getHardMove();
+            else if(aiDifficulty === 'Medium') moveIdx = getMediumMove();
+            else {
+                let emptySpots = localBoard.map((v, i) => v === "" ? i : null).filter(v => v !== null);
+                if(emptySpots.length > 0) moveIdx = emptySpots[Math.floor(Math.random() * emptySpots.length)];
+            }
+            
+            if(moveIdx !== -1 && moveIdx !== undefined) localBoard[moveIdx] = "O";
+        }
+
+
+        // ==============================================
+        //           2. OFFLINE PLAY LOGIC
+        // ==============================================
+        window.startOfflinePlay = () => {
+            currentMode = "offline";
+            localBoard = Array(9).fill("");
+            localTurn = "X";
+            isLocalGameActive = true;
+
+            window.location.hash = 'game';
+            document.getElementById('home-page').style.display = 'none';
+            document.getElementById('game-page').style.display = 'flex';
+            document.getElementById('chat-section').style.display = 'none'; 
+            
+            updateGameVSHeader("Player X", defaultDp, "Player O", defaultDp);
+            document.getElementById('status').innerText = "Player X's Turn";
+            renderLocalBoard();
+        };
+
+        function renderLocalBoard() {
+            const cells = document.querySelectorAll('.cell');
+            localBoard.forEach((val, i) => {
+                cells[i].innerText = val;
+                cells[i].style.color = val === "X" ? "#38bdf8" : (val === "O" ? "#fbbf24" : "#f8fafc");
+            });
+        }
+
+        function handleLocalWin(winner) {
+            isLocalGameActive = false;
+            renderLocalBoard();
+            if(winner === "Draw") {
+                document.getElementById('status').innerText = "🤝 Game is a Draw!";
+            } else {
+                if(currentMode === "computer") {
+                    if(winner === "X") {
+                        triggerWinAnimation();
+                        document.getElementById('status').innerText = `🏆 You Win!`;
+                        document.getElementById('coin-popup').style.display = 'flex'; 
+                    } else {
+                        document.getElementById('status').innerText = `💻 Computer Wins!`;
+                    }
+                } else {
+                    triggerWinAnimation();
+                    document.getElementById('status').innerText = `🏆 Player ${winner} Wins!`;
+                }
+            }
+        }
+
+
+        // ==============================================
+        //           3. ONLINE MULTIPLAYER LOGIC
+        // ==============================================
+        const gameId = "global_room"; 
+        const gameRef = doc(db, "games", gameId);
+        const chatRef = collection(db, "chats");
+
+        let playerSymbol = null;
+        let onlineBoard = Array(9).fill("");
+
+        window.startOnlinePlay = async () => {
+            if(!currentUser) return;
+            currentMode = "online";
+            window.location.hash = 'vs';
+
+            document.getElementById('home-page').style.display = 'none';
+            document.getElementById('vs-page').style.display = 'flex';
+            document.getElementById('chat-section').style.display = 'block'; 
+
+            document.getElementById('vs-p1-img').src = currentUser.photoURL || defaultDp;
+            document.getElementById('vs-p1-name').innerText = currentUser.displayName;
+            document.getElementById('vs-loading-msg').innerText = "Searching for opponent...";
+            document.getElementById('vs-p2-name').innerText = "Waiting...";
+            document.getElementById('vs-p2-img').src = defaultDp;
+
+            const myData = { uid: currentUser.uid, name: currentUser.displayName, photo: currentUser.photoURL || defaultDp };
+            
+            try {
+                const docSnap = await getDoc(gameRef);
+
+                if (!docSnap.exists() || docSnap.data().winner !== null) {
+                    await setDoc(gameRef, { playerX: myData, playerO: null, board: Array(9).fill(""), turn: "X", winner: null });
+                    playerSymbol = "X";
+                } else {
+                    const data = docSnap.data();
+                    if (!data.playerX || data.playerX.uid === currentUser.uid) {
+                        await updateDoc(gameRef, { playerX: myData });
+                        playerSymbol = "X";
+                    } else if (!data.playerO) {
+                        await updateDoc(gameRef, { playerO: myData });
+                        playerSymbol = "O";
+                    } else if (data.playerO.uid === currentUser.uid) {
+                        playerSymbol = "O";
+                    } else { playerSymbol = null; }
+                }
+
+                vsListener = onSnapshot(gameRef, (snapshot) => {
+                    const data = snapshot.data();
+                    if(data && data.playerX && data.playerO) {
+                        const opponent = playerSymbol === "X" ? data.playerO : data.playerX;
+                        document.getElementById('vs-p2-img').src = opponent.photo || defaultDp;
+                        document.getElementById('vs-p2-name').innerText = opponent.name;
+                        document.getElementById('vs-loading-msg').innerText = "Match Found! Starting game...";
+                        
+                        setTimeout(() => {
+                            if (window.location.hash === '#vs') {
+                                history.replaceState(null, null, '#game');
+                                document.getElementById('vs-page').style.display = 'none';
+                                document.getElementById('game-page').style.display = 'flex';
+                                
+                                const p1 = playerSymbol === "X" ? myData : opponent;
+                                const p2 = playerSymbol === "X" ? opponent : myData;
+                                updateGameVSHeader(p1.name, p1.photo, p2.name, p2.photo);
+
+                                if(vsListener) { vsListener(); vsListener = null; }
+                                startOnlineBoardListener(); 
+                            }
+                        }, 3000); 
+                    }
+                });
+            } catch(e) {
+                console.error(e);
+                alert("Please go to Firebase Console -> Firestore Database -> Rules -> set 'allow read, write: if true;' to play Online!");
+                goHome();
+            }
+        };
+
+        function startOnlineBoardListener() {
+            vsListener = onSnapshot(gameRef, (snapshot) => {
+                if (!snapshot.exists()) return;
+                const data = snapshot.data();
+                onlineBoard = data.board || Array(9).fill("");
+                const cells = document.querySelectorAll('.cell');
+                
+                onlineBoard.forEach((val, i) => {
+                    cells[i].innerText = val;
+                    cells[i].style.color = val === "X" ? "#38bdf8" : (val === "O" ? "#fbbf24" : "#f8fafc");
+                });
+
+                if (data.winner) {
+                    if(data.winner === "Draw") {
+                        document.getElementById('status').innerText = "🤝 Game is a Draw!";
+                    } else {
+                        document.getElementById('status').innerText = `🏆 ${data.winner} Wins!`;
+                        if(data.winner === currentUser.displayName) triggerWinAnimation();
+                    }
+                } else {
+                    const isMyTurn = data.turn === playerSymbol;
+                    document.getElementById('status').innerText = isMyTurn ? "🟢 Your Turn!" : "🔴 Opponent's Turn";
+                }
+            });
+        }
+
+
+        // ==============================================
+        //           CELL CLICK EVENT (ALL MODES)
+        // ==============================================
+        document.querySelectorAll('.cell').forEach(cell => {
+            cell.addEventListener('click', async (e) => {
+                const index = e.target.dataset.index;
+
+                if(currentMode === "online") {
+                    if(!playerSymbol) return; 
+                    try {
+                        const docSnap = await getDoc(gameRef);
+                        if (docSnap.exists()) {
+                            const data = docSnap.data();
+                            if (playerSymbol === data.turn && onlineBoard[index] === "" && !data.winner) {
+                                onlineBoard[index] = playerSymbol;
+                                const nextTurn = playerSymbol === "X" ? "O" : "X";
+                                const winSym = checkWinner(onlineBoard);
+                                const winnerName = winSym === "X" ? data.playerX.name : (winSym === "O" ? data.playerO.name : winSym);
+                                await updateDoc(gameRef, { board: onlineBoard, turn: nextTurn, winner: winnerName || null });
+                            }
+                        }
+                    } catch(err) { console.error(err); }
+                }
+                
+                else if(currentMode === "offline") {
+                    if(localBoard[index] === "" && isLocalGameActive) {
+                        localBoard[index] = localTurn;
+                        let win = checkWinner(localBoard);
+                        if(win) handleLocalWin(win);
+                        else {
+                            localTurn = localTurn === "X" ? "O" : "X";
+                            document.getElementById('status').innerText = `Player ${localTurn}'s Turn`;
+                            renderLocalBoard();
+                        }
+                    }
+                }
+
+                else if(currentMode === "computer") {
+                    if(localBoard[index] === "" && localTurn === "X" && isLocalGameActive) {
+                        localBoard[index] = "X";
+                        let win = checkWinner(localBoard);
+                        renderLocalBoard();
+                        
+                        if(win) { handleLocalWin(win); return; }
+
+                        localTurn = "O";
+                        document.getElementById('status').innerText = "🤖 Computer is thinking...";
+                        
+                        setTimeout(() => {
+                            if(!isLocalGameActive) return;
+                            makeComputerMove();
+                            win = checkWinner(localBoard);
+                            localTurn = "X";
+                            renderLocalBoard();
+                            if(win) handleLocalWin(win);
+                            else document.getElementById('status').innerText = "🟢 Your Turn (X)";
+                        }, 600); 
+                    }
+                }
+            });
         });
 
-        window.handleImageUpload = (inputElem) => {
-            let file = inputElem.files[0];
-            if(file) {
-                let reader = new FileReader();
-                reader.onload = function(e) {
-                    let wrapper = inputElem.closest('.ed-wrapper');
-                    wrapper.querySelector('.img-placeholder').style.display = 'none';
-                    let img = wrapper.querySelector('.doc-img');
-                    img.src = e.target.result;
-                    img.style.display = 'block';
-                }
-                reader.readAsDataURL(file);
-            }
-        }
-
-        window.selectTool = (toolName) => {
-            document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
-            if(activeTool === toolName) {
-                activeTool = null;
-            } else {
-                activeTool = toolName;
-                document.getElementById('tool-' + toolName).classList.add('active');
+        // ==============================================
+        //           CHAT SYSTEM & GAME RESET
+        // ==============================================
+        document.getElementById('send-btn').onclick = async () => {
+            const input = document.getElementById('msg-input');
+            if (input.value.trim() !== "" && currentUser) {
+                try {
+                    await addDoc(chatRef, { sender: currentUser.displayName, text: input.value, timestamp: Date.now() });
+                    input.value = "";
+                } catch(e) { console.error("Chat error", e); }
             }
         };
 
-        window.pasteBlock = (e) => {
-            if(!e.target.classList.contains('doc-page')) return; 
-            if(!activeTool) return; 
+        try {
+            onSnapshot(query(chatRef, orderBy("timestamp", "asc")), (snapshot) => {
+                const box = document.getElementById('messages');
+                box.innerHTML = '';
+                snapshot.forEach((doc) => {
+                    const msg = doc.data();
+                    const msgElem = document.createElement('p');
+                    msgElem.innerHTML = `<span class="sender-name">${msg.sender}:</span> ${msg.text}`;
+                    box.appendChild(msgElem);
+                });
+                box.scrollTop = box.scrollHeight;
+            });
+        } catch(e) { console.error("Chat sync error", e); }
 
-            const canvas = document.getElementById('editorCanvas');
-            let block = createBlock(activeTool, e.offsetX, e.offsetY);
-            
-            let pageNum = document.getElementById('pageNumberDisplay');
-            if(pageNum) { canvas.insertBefore(block, pageNum); } 
-            else { canvas.appendChild(block); }
-            
-            block.classList.add('focused');
-            let editable = block.querySelector('[contenteditable="true"]');
-            if(editable) editable.focus();
-
-            activeTool = null;
-            document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('reset-btn').onclick = async () => {
+            if(currentMode === "online") {
+                if(!playerSymbol) return; 
+                try { await updateDoc(gameRef, { board: Array(9).fill(""), turn: "X", winner: null }); } catch(e){}
+            } else if(currentMode === "offline") {
+                startOfflinePlay();
+            } else if(currentMode === "computer") {
+                startGameWithDifficulty(aiDifficulty);
+            }
         };
 
-        function wrapHtml(htmlContent, isImage = false, x = 0, y = 0) {
-            let wrapper = document.createElement('div');
-            wrapper.className = 'ed-wrapper' + (isImage ? ' img-wrapper' : '');
-            
-            if(isImage) {
-                wrapper.style.left = x + 'px';
-                wrapper.style.top = y + 'px';
-            }
-
-            wrapper.innerHTML = `
-                <button class="block-del-btn" onclick="this.parentElement.remove()" contenteditable="false" title="Delete">✖</button>
-                ${htmlContent}
-                ${isImage ? '<div class="resize-handle" title="Drag to Resize"></div>' : ''}
-            `;
-
-            if(isImage) makeDraggableAndResizable(wrapper);
-            return wrapper;
-        }
-
-        function createBlock(type, x, y) {
-            if (type === 'heading') return wrapHtml(`<div class="ed-heading" contenteditable="true" placeholder="Enter Heading..."></div>`);
-            else if (type === 'line') return createLineBlock();
-            else if (type === 'point') {
-                let html = `
-                    <div class="ed-point-box">
-                        <span class="ed-bullet">• </span>
-                        <span class="ed-point-title" contenteditable="true" placeholder="Topic"></span>
-                        <span class="ed-point-colon"> :- </span>
-                        <span class="ed-point-desc" contenteditable="true" placeholder="Description..."></span>
-                    </div>`;
-                return wrapHtml(html);
-            }
-            else if (type === 'image') {
-                let html = `
-                    <div class="img-placeholder" onclick="this.nextElementSibling.click()">📷 Add Img</div>
-                    <input type="file" accept="image/*" style="display:none;" onchange="handleImageUpload(this)">
-                    <img class="doc-img" src="" style="display:none;">
-                `;
-                return wrapHtml(html, true, x, y);
-            }
-        }
-
-        function createLineBlock() {
-            return wrapHtml(`<div class="ed-line" contenteditable="true" placeholder="Write line here..."></div>`);
-        }
-
-        // ================= Drag & Corner Resize for Image =================
-        function makeDraggableAndResizable(element) {
-            if(element.dataset.bound) return;
-            element.dataset.bound = "true";
-
-            let isDragging = false, isResizing = false;
-            let startX, startY, initialX, initialY, initialWidth, initialHeight;
-
-            const startAction = (e) => {
-                if(e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || e.target.classList.contains('img-placeholder')) return;
-                
-                let clientX = e.touches ? e.touches[0].clientX : e.clientX;
-                let clientY = e.touches ? e.touches[0].clientY : e.clientY;
-                startX = clientX; 
-                startY = clientY;
-
-                if (e.target.classList.contains('resize-handle')) {
-                    isResizing = true;
-                    let rect = element.getBoundingClientRect();
-                    initialWidth = rect.width;
-                    initialHeight = rect.height;
-                    e.stopPropagation();
-                } else {
-                    isDragging = true;
-                    initialX = element.offsetLeft; 
-                    initialY = element.offsetTop;
-                }
-            };
-
-            const performAction = (e) => {
-                if (!isDragging && !isResizing) return;
-                e.preventDefault(); 
-                
-                let clientX = e.touches ? e.touches[0].clientX : e.clientX;
-                let clientY = e.touches ? e.touches[0].clientY : e.clientY;
-                let dx = clientX - startX; 
-                let dy = clientY - startY;
-
-                if (isResizing) {
-                    element.style.width = Math.max(50, initialWidth + dx) + 'px';
-                    element.style.height = Math.max(50, initialHeight + dy) + 'px';
-                } else if (isDragging) {
-                    element.style.left = (initialX + dx) + 'px';
-                    element.style.top = (initialY + dy) + 'px';
-                }
-            };
-
-            const stopAction = () => { isDragging = false; isResizing = false; };
-
-            element.addEventListener('mousedown', startAction);
-            document.addEventListener('mousemove', performAction);
-            document.addEventListener('mouseup', stopAction);
-
-            element.addEventListener('touchstart', startAction, {passive: false});
-            document.addEventListener('touchmove', performAction, {passive: false});
-            document.addEventListener('touchend', stopAction);
-        }
     </script>
 </body>
-        </html>
+</html>

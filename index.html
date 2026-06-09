@@ -254,7 +254,7 @@
 
     <!-- ================== DIFFICULTY PAGE ================== -->
     <div id="difficulty-page">
-        <button class="back-btn" onclick="goHome()">⬅ Back</button>
+        <button class="back-btn" onclick="goBack()">⬅ Back</button>
         <h2 style="color: #38bdf8; margin-bottom: 20px; font-size: 2rem;">Select Difficulty</h2>
         <div class="menu-container" style="padding: 0; flex:none;">
             <div class="game-card" style="background: linear-gradient(135deg, #22c55e, #16a34a); color: white;" onclick="startGameWithDifficulty('Easy')">😁 Easy Mode</div>
@@ -265,9 +265,10 @@
 
     <!-- ================== VS PAGE ================== -->
     <div id="vs-page">
+        <button class="back-btn" onclick="goBack()" style="z-index: 100;">⬅ Cancel</button>
         <div class="vs-container">
             <div class="player-card">
-                <img id="vs-p1-img" src="" alt="P1">
+                <img id="vs-p1-img" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="P1">
                 <h3 id="vs-p1-name">Loading...</h3>
             </div>
             <div class="vs-text">VS</div>
@@ -281,7 +282,7 @@
 
     <!-- ================== GAME PAGE ================== -->
     <div id="game-page">
-        <button class="back-btn" onclick="goHome()">⬅ Quit</button>
+        <button class="back-btn" onclick="goBack()">⬅ Quit</button>
 
         <div class="game-container">
             
@@ -358,36 +359,69 @@
             else { login.style.display = 'none'; reg.style.display = 'block'; }
         };
 
-        // --- BACK BUTTON LOGIC ---
-        window.goHome = () => {
-            // এই ফাংশনটি এখন সব সময় হোম পেজে নিয়ে আসবে
-            document.getElementById('auth-page').style.display = 'none';
+        // --- HARDWARE BACK BUTTON LOGIC (Hash Routing) ---
+        window.addEventListener('hashchange', () => {
+            if (!currentUser) return; 
+            const hash = window.location.hash;
+            
+            // --- NEW: Remove player from DB if they go back from online match ---
+            if ((hash === '' || hash === '#home') && currentMode === "online" && playerSymbol) {
+                try { updateDoc(gameRef, { [playerSymbol === "X" ? "playerX" : "playerO"]: null }); } catch(e){}
+                playerSymbol = null;
+            }
+            
+            // Hide all pages first
             document.getElementById('profile-page').style.display = 'none';
             document.getElementById('difficulty-page').style.display = 'none';
             document.getElementById('game-page').style.display = 'none';
             document.getElementById('vs-page').style.display = 'none';
+            document.getElementById('home-page').style.display = 'none';
             document.getElementById('coin-popup').style.display = 'none';
-            
-            document.getElementById('home-page').style.display = 'flex';
-            
-            if(vsListener) { vsListener(); vsListener = null; }
-            isLocalGameActive = false;
+
+            if (hash === '#profile') {
+                document.getElementById('profile-page').style.display = 'flex';
+            } else if (hash === '#difficulty') {
+                document.getElementById('difficulty-page').style.display = 'flex';
+            } else if (hash === '#vs') {
+                document.getElementById('vs-page').style.display = 'flex';
+            } else if (hash === '#game') {
+                document.getElementById('game-page').style.display = 'flex';
+                document.getElementById('chat-section').style.display = (currentMode === 'online') ? 'block' : 'none';
+            } else {
+                // Default is Home Page
+                document.getElementById('home-page').style.display = 'flex';
+                if(vsListener) { vsListener(); vsListener = null; }
+                isLocalGameActive = false;
+            }
+        });
+
+        // --- NEW: Clean up if user closes the tab/app ---
+        window.addEventListener('beforeunload', () => {
+            if (currentMode === "online" && playerSymbol) {
+                updateDoc(gameRef, { [playerSymbol === "X" ? "playerX" : "playerO"]: null });
+            }
+        });
+
+        // Trigger Back programmatically for UI buttons
+        window.goBack = () => {
+            if (window.location.hash !== '' && window.location.hash !== '#home') {
+                history.back();
+            }
         };
 
         window.showProfile = () => {
             if(!currentUser) return;
-            document.getElementById('profile-page').style.display = 'flex';
+            window.location.hash = 'profile';
             document.getElementById('prof-page-img').src = currentUser.photoURL || defaultDp;
             document.getElementById('prof-page-name').innerText = currentUser.displayName;
             document.getElementById('prof-page-email').innerText = currentUser.email;
             document.getElementById('prof-page-coins').innerText = userCoins;
         };
 
-        window.closeProfile = () => { document.getElementById('profile-page').style.display = 'none'; };
+        window.closeProfile = () => { window.goBack(); };
 
         window.showDifficultyPage = () => {
-            document.getElementById('home-page').style.display = 'none';
-            document.getElementById('difficulty-page').style.display = 'flex';
+            window.location.hash = 'difficulty';
         };
 
         function updateGameVSHeader(p1Name, p1Img, p2Name, p2Img) {
@@ -420,17 +454,37 @@
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUser = user;
+                
+                // Initialize default hash if loading directly
+                if (window.location.hash === '') history.replaceState(null, null, '#home');
+
                 try {
                     const userDocRef = doc(db, "users", user.uid);
                     const userDoc = await getDoc(userDocRef);
-                    userCoins = userDoc.exists() ? (userDoc.data().coins || 0) : 0;
+                    if(userDoc.exists()) {
+                        userCoins = userDoc.data().coins || 0;
+                    } else {
+                        await setDoc(userDocRef, { coins: 0, name: user.displayName }, { merge: true });
+                        userCoins = 0;
+                    }
                 } catch(error) { userCoins = 0; }
                 
                 updateCoinDisplay();
                 document.getElementById('auth-page').style.display = 'none';
-                document.getElementById('home-page').style.display = 'flex';
+                
+                // Manually trigger hash route to show correct page on load
+                window.dispatchEvent(new Event('hashchange'));
+                
                 document.getElementById('header-name').innerText = user.displayName || "Gamer";
                 document.getElementById('header-photo').src = user.photoURL || defaultDp;
+            } else {
+                currentUser = null;
+                document.getElementById('auth-page').style.display = 'flex';
+                document.getElementById('home-page').style.display = 'none';
+                document.getElementById('game-page').style.display = 'none';
+                document.getElementById('vs-page').style.display = 'none';
+                document.getElementById('difficulty-page').style.display = 'none';
+                document.getElementById('profile-page').style.display = 'none';
             }
         });
 
@@ -438,62 +492,153 @@
             const email = document.getElementById('reg-email').value;
             const pass = document.getElementById('reg-password').value;
             const name = document.getElementById('reg-name').value;
+            const photo = document.getElementById('reg-photo').value;
+            if(!email || !pass || !name) return alert("Please fill details!");
             try {
-                const uc = await createUserWithEmailAndPassword(auth, email, pass);
-                await updateProfile(uc.user, { displayName: name, photoURL: defaultDp });
-                await setDoc(doc(db, "users", uc.user.uid), { coins: 0, name: name });
-                window.location.reload();
+                const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+                await updateProfile(userCredential.user, { displayName: name, photoURL: photo || defaultDp });
+                try { await setDoc(doc(db, "users", userCredential.user.uid), { coins: 0, name: name }, { merge: true }); } catch(e){}
+                window.location.reload(); 
             } catch(e) { alert(e.message); }
         };
 
         window.loginUser = async () => {
-            try { await signInWithEmailAndPassword(auth, document.getElementById('login-email').value, document.getElementById('login-password').value); } 
-            catch(e) { alert(e.message); }
+            const email = document.getElementById('login-email').value;
+            const pass = document.getElementById('login-password').value;
+            if(!email || !pass) return alert("Enter email and password");
+            try { await signInWithEmailAndPassword(auth, email, pass); } catch(e) { alert("Login Failed: " + e.message); }
         };
 
-        window.logoutUser = () => { signOut(auth); window.location.reload(); };
+        window.logoutUser = () => { signOut(auth); window.location.hash = ''; window.location.reload(); };
 
-        // --- COIN CLAIM ---
         window.claimCoins = async () => {
+            if(!currentUser) return;
             userCoins += 50;
             updateCoinDisplay();
             document.getElementById('coin-popup').style.display = 'none';
-            await setDoc(doc(db, "users", currentUser.uid), { coins: userCoins }, { merge: true });
+            try { await setDoc(doc(db, "users", currentUser.uid), { coins: userCoins }, { merge: true }); } catch(e){}
         };
 
-        // --- COMPUTER PLAY ---
+        function checkWinner(board) {
+            const ways = [[0,1,2], [3,4,5], [6,7,8], [0,3,6], [1,4,7], [2,5,8], [0,4,8], [2,4,6]];
+            for (let c of ways) {
+                if (board[c[0]] && board[c[0]] === board[c[1]] && board[c[0]] === board[c[2]]) return board[c[0]]; 
+            }
+            return board.includes("") ? null : "Draw";
+        }
+
+
+        // ==============================================
+        //           1. COMPUTER PLAY LOGIC
+        // ==============================================
         window.startGameWithDifficulty = (diff) => {
             aiDifficulty = diff;
             currentMode = "computer";
             localBoard = Array(9).fill("");
             localTurn = "X"; 
             isLocalGameActive = true;
-            document.getElementById('difficulty-page').style.display = 'none';
-            document.getElementById('game-page').style.display = 'flex';
-            document.getElementById('chat-section').style.display = 'none';
+            
+            // Route to Game Screen
+            window.location.hash = 'game';
+            
             updateGameVSHeader(currentUser.displayName, currentUser.photoURL, `Computer (${diff})`, robotDp);
             document.getElementById('status').innerText = "🟢 Your Turn (X)";
             renderLocalBoard();
         };
 
-        function makeComputerMove() {
-            let emptySpots = localBoard.map((v, i) => v === "" ? i : null).filter(v => v !== null);
-            if(emptySpots.length > 0) {
-                let move = (aiDifficulty === 'Hard') ? getHardMove() : (aiDifficulty === 'Medium' ? getMediumMove() : emptySpots[Math.floor(Math.random() * emptySpots.length)]);
-                localBoard[move] = "O";
+        function minimax(board, isMaximizing) {
+            let result = checkWinner(board);
+            if (result === "O") return 10;
+            if (result === "X") return -10;
+            if (result === "Draw") return 0;
+
+            if (isMaximizing) {
+                let bestScore = -Infinity;
+                for (let i = 0; i < 9; i++) {
+                    if (board[i] === "") {
+                        board[i] = "O";
+                        let score = minimax(board, false);
+                        board[i] = "";
+                        bestScore = Math.max(score, bestScore);
+                    }
+                }
+                return bestScore;
+            } else {
+                let bestScore = Infinity;
+                for (let i = 0; i < 9; i++) {
+                    if (board[i] === "") {
+                        board[i] = "X";
+                        let score = minimax(board, true);
+                        board[i] = "";
+                        bestScore = Math.min(score, bestScore);
+                    }
+                }
+                return bestScore;
             }
         }
 
-        // --- OFFLINE PLAY ---
+        function getHardMove() {
+            let bestScore = -Infinity;
+            let move = -1;
+            for (let i = 0; i < 9; i++) {
+                if (localBoard[i] === "") {
+                    localBoard[i] = "O";
+                    let score = minimax(localBoard, false);
+                    localBoard[i] = "";
+                    if (score > bestScore) {
+                        bestScore = score;
+                        move = i;
+                    }
+                }
+            }
+            return move;
+        }
+
+        function getMediumMove() {
+            for (let i = 0; i < 9; i++) {
+                if (localBoard[i] === "") {
+                    localBoard[i] = "O";
+                    if(checkWinner(localBoard) === "O") { localBoard[i] = ""; return i; }
+                    localBoard[i] = "";
+                }
+            }
+            for (let i = 0; i < 9; i++) {
+                if (localBoard[i] === "") {
+                    localBoard[i] = "X";
+                    if(checkWinner(localBoard) === "X") { localBoard[i] = ""; return i; }
+                    localBoard[i] = "";
+                }
+            }
+            let emptySpots = localBoard.map((v, i) => v === "" ? i : null).filter(v => v !== null);
+            return emptySpots[Math.floor(Math.random() * emptySpots.length)];
+        }
+
+        function makeComputerMove() {
+            let moveIdx = -1;
+            if(aiDifficulty === 'Hard') moveIdx = getHardMove();
+            else if(aiDifficulty === 'Medium') moveIdx = getMediumMove();
+            else {
+                let emptySpots = localBoard.map((v, i) => v === "" ? i : null).filter(v => v !== null);
+                if(emptySpots.length > 0) moveIdx = emptySpots[Math.floor(Math.random() * emptySpots.length)];
+            }
+            
+            if(moveIdx !== -1 && moveIdx !== undefined) localBoard[moveIdx] = "O";
+        }
+
+
+        // ==============================================
+        //           2. OFFLINE PLAY LOGIC
+        // ==============================================
         window.startOfflinePlay = () => {
             currentMode = "offline";
             localBoard = Array(9).fill("");
             localTurn = "X";
             isLocalGameActive = true;
-            document.getElementById('home-page').style.display = 'none';
-            document.getElementById('game-page').style.display = 'flex';
-            document.getElementById('chat-section').style.display = 'none';
-            updateGameVSHeader("Player 1", defaultDp, "Player 2", defaultDp);
+
+            // Route to Game Screen
+            window.location.hash = 'game';
+            
+            updateGameVSHeader("Player X", defaultDp, "Player O", defaultDp);
             document.getElementById('status').innerText = "Player X's Turn";
             renderLocalBoard();
         };
@@ -509,94 +654,227 @@
         function handleLocalWin(winner) {
             isLocalGameActive = false;
             renderLocalBoard();
-            if(winner === "Draw") document.getElementById('status').innerText = "🤝 Game is a Draw!";
-            else {
-                if(currentMode === "computer" && winner === "X") {
-                    triggerWinAnimation();
-                    document.getElementById('status').innerText = `🏆 You Win!`;
-                    document.getElementById('coin-popup').style.display = 'flex';
+            if(winner === "Draw") {
+                document.getElementById('status').innerText = "🤝 Game is a Draw!";
+            } else {
+                if(currentMode === "computer") {
+                    if(winner === "X") {
+                        triggerWinAnimation();
+                        document.getElementById('status').innerText = `🏆 You Win!`;
+                        document.getElementById('coin-popup').style.display = 'flex'; 
+                    } else {
+                        document.getElementById('status').innerText = `💻 Computer Wins!`;
+                    }
                 } else {
-                    document.getElementById('status').innerText = `🏆 ${winner === "X" ? "Player X" : "Player O"} Wins!`;
+                    triggerWinAnimation();
+                    document.getElementById('status').innerText = `🏆 Player ${winner} Wins!`;
                 }
             }
         }
 
-        // --- ONLINE PLAY ---
+
+        // ==============================================
+        //           3. ONLINE MULTIPLAYER LOGIC
+        // ==============================================
+        const gameId = "global_room"; 
+        const gameRef = doc(db, "games", gameId);
+        const chatRef = collection(db, "chats");
+
+        let playerSymbol = null;
+        let onlineBoard = Array(9).fill("");
+
         window.startOnlinePlay = async () => {
+            if(!currentUser) return;
             currentMode = "online";
-            document.getElementById('home-page').style.display = 'none';
-            document.getElementById('vs-page').style.display = 'flex';
-            document.getElementById('chat-section').style.display = 'block';
+            
+            document.getElementById('vs-p1-img').src = currentUser.photoURL || defaultDp;
+            document.getElementById('vs-p1-name').innerText = currentUser.displayName || "Player";
+            document.getElementById('vs-loading-msg').innerText = "Searching for opponent...";
+            document.getElementById('vs-p2-name').innerText = "Waiting...";
+            document.getElementById('vs-p2-img').src = defaultDp;
+
+            // Route to VS Screen
+            window.location.hash = 'vs';
 
             const myData = { uid: currentUser.uid, name: currentUser.displayName, photo: currentUser.photoURL || defaultDp };
-            const docSnap = await getDoc(gameRef);
             
-            // Logic to join/create room
-            if (!docSnap.exists() || docSnap.data().winner !== null) {
-                await setDoc(gameRef, { playerX: myData, playerO: null, board: Array(9).fill(""), turn: "X", winner: null });
-                playerSymbol = "X";
-            } else {
-                const data = docSnap.data();
-                if (!data.playerX || data.playerX.uid === currentUser.uid) { playerSymbol = "X"; await updateDoc(gameRef, { playerX: myData }); }
-                else { playerSymbol = "O"; await updateDoc(gameRef, { playerO: myData }); }
-            }
+            try {
+                const docSnap = await getDoc(gameRef);
 
-            vsListener = onSnapshot(gameRef, (snapshot) => {
-                const data = snapshot.data();
-                if(data && data.playerX && data.playerO) {
-                    document.getElementById('vs-page').style.display = 'none';
-                    document.getElementById('game-page').style.display = 'flex';
-                    updateGameVSHeader(data.playerX.name, data.playerX.photo, data.playerO.name, data.playerO.photo);
-                    startOnlineBoardListener();
+                // --- NEW: Reset room if it's completely abandoned ---
+                if (!docSnap.exists() || docSnap.data().winner !== null || (!docSnap.data().playerX && !docSnap.data().playerO)) {
+                    await setDoc(gameRef, { playerX: myData, playerO: null, board: Array(9).fill(""), turn: "X", winner: null });
+                    playerSymbol = "X";
+                } else {
+                    const data = docSnap.data();
+                    if (!data.playerX || data.playerX.uid === currentUser.uid) {
+                        await updateDoc(gameRef, { playerX: myData });
+                        playerSymbol = "X";
+                    } else if (!data.playerO || data.playerO.uid === currentUser.uid) {
+                        await updateDoc(gameRef, { playerO: myData });
+                        playerSymbol = "O";
+                    } else { playerSymbol = null; }
                 }
-            });
+
+                vsListener = onSnapshot(gameRef, (snapshot) => {
+                    const data = snapshot.data();
+                    if(data && data.playerX && data.playerO) {
+                        const opponent = playerSymbol === "X" ? data.playerO : data.playerX;
+                        
+                        document.getElementById('vs-p2-img').src = opponent.photo || defaultDp;
+                        document.getElementById('vs-p2-name').innerText = opponent.name;
+                        document.getElementById('vs-loading-msg').innerText = "Match Found! Starting game...";
+                        
+                        setTimeout(() => {
+                            if (window.location.hash === '#vs') {
+                                history.replaceState(null, null, '#game');
+                                window.dispatchEvent(new Event('hashchange')); 
+                                
+                                const p1 = playerSymbol === "X" ? myData : opponent;
+                                const p2 = playerSymbol === "X" ? opponent : myData;
+                                updateGameVSHeader(p1.name, p1.photo, p2.name, p2.photo);
+
+                                if(vsListener) { vsListener(); vsListener = null; }
+                                startOnlineBoardListener(); 
+                            }
+                        }, 3000); 
+                    }
+                });
+            } catch(e) { console.error(e); }
         };
 
         function startOnlineBoardListener() {
-            onSnapshot(gameRef, (snapshot) => {
+            vsListener = onSnapshot(gameRef, (snapshot) => {
+                if (!snapshot.exists()) return;
                 const data = snapshot.data();
-                onlineBoard = data.board;
-                document.querySelectorAll('.cell').forEach((c, i) => c.innerText = onlineBoard[i]);
-                if(data.winner) document.getElementById('status').innerText = `🏆 ${data.winner} Wins!`;
-                else document.getElementById('status').innerText = (data.turn === playerSymbol) ? "🟢 Your Turn" : "🔴 Opponent's Turn";
+                onlineBoard = data.board || Array(9).fill("");
+                const cells = document.querySelectorAll('.cell');
+                
+                onlineBoard.forEach((val, i) => {
+                    cells[i].innerText = val;
+                    cells[i].style.color = val === "X" ? "#38bdf8" : (val === "O" ? "#fbbf24" : "#f8fafc");
+                });
+
+                if (data.winner) {
+                    if(data.winner === "Draw") {
+                        document.getElementById('status').innerText = "🤝 Game is a Draw!";
+                    } else {
+                        document.getElementById('status').innerText = `🏆 ${data.winner} Wins!`;
+                        if(data.winner === currentUser.displayName) triggerWinAnimation();
+                    }
+                } else {
+                    // --- NEW: Show if opponent left mid-game ---
+                    if ((playerSymbol === "X" && !data.playerO) || (playerSymbol === "O" && !data.playerX)) {
+                        document.getElementById('status').innerText = "⚠️ Opponent Left!";
+                    } else {
+                        const isMyTurn = data.turn === playerSymbol;
+                        document.getElementById('status').innerText = isMyTurn ? "🟢 Your Turn!" : "🔴 Opponent's Turn";
+                    }
+                }
             });
         }
 
-        // --- CELL CLICK (Universal) ---
+
+        // ==============================================
+        //           CELL CLICK EVENT (ALL MODES)
+        // ==============================================
         document.querySelectorAll('.cell').forEach(cell => {
             cell.addEventListener('click', async (e) => {
-                const idx = e.target.dataset.index;
-                if(currentMode === "online" && playerSymbol) {
-                    const data = (await getDoc(gameRef)).data();
-                    if(data.turn === playerSymbol && onlineBoard[idx] === "") {
-                        onlineBoard[idx] = playerSymbol;
-                        await updateDoc(gameRef, { board: onlineBoard, turn: playerSymbol === "X" ? "O" : "X" });
-                    }
-                } else if(currentMode !== "online" && isLocalGameActive && localBoard[idx] === "") {
-                    localBoard[idx] = localTurn;
-                    let win = checkWinner(localBoard);
-                    if(win) handleLocalWin(win);
-                    else {
-                        localTurn = localTurn === "X" ? "O" : "X";
-                        renderLocalBoard();
-                        if(currentMode === "computer" && localTurn === "O") {
-                            setTimeout(() => { makeComputerMove(); let w = checkWinner(localBoard); if(w) handleLocalWin(w); else { localTurn = "X"; renderLocalBoard(); }}, 600);
+                const index = e.target.dataset.index;
+
+                if(currentMode === "online") {
+                    if(!playerSymbol) return; 
+                    try {
+                        const docSnap = await getDoc(gameRef);
+                        if (docSnap.exists()) {
+                            const data = docSnap.data();
+                            if (playerSymbol === data.turn && onlineBoard[index] === "" && !data.winner) {
+                                onlineBoard[index] = playerSymbol;
+                                const nextTurn = playerSymbol === "X" ? "O" : "X";
+                                const winSym = checkWinner(onlineBoard);
+                                const winnerName = winSym === "X" ? data.playerX.name : (winSym === "O" ? data.playerO.name : winSym);
+                                await updateDoc(gameRef, { board: onlineBoard, turn: nextTurn, winner: winnerName || null });
+                            }
                         }
+                    } catch(err) { console.error(err); }
+                }
+                
+                else if(currentMode === "offline") {
+                    if(localBoard[index] === "" && isLocalGameActive) {
+                        localBoard[index] = localTurn;
+                        let win = checkWinner(localBoard);
+                        if(win) handleLocalWin(win);
+                        else {
+                            localTurn = localTurn === "X" ? "O" : "X";
+                            document.getElementById('status').innerText = `Player ${localTurn}'s Turn`;
+                            renderLocalBoard();
+                        }
+                    }
+                }
+
+                else if(currentMode === "computer") {
+                    if(localBoard[index] === "" && localTurn === "X" && isLocalGameActive) {
+                        localBoard[index] = "X";
+                        let win = checkWinner(localBoard);
+                        renderLocalBoard();
+                        
+                        if(win) { handleLocalWin(win); return; }
+
+                        localTurn = "O";
+                        document.getElementById('status').innerText = "🤖 Computer is thinking...";
+                        
+                        setTimeout(() => {
+                            if(!isLocalGameActive) return;
+                            makeComputerMove();
+                            win = checkWinner(localBoard);
+                            localTurn = "X";
+                            renderLocalBoard();
+                            if(win) handleLocalWin(win);
+                            else document.getElementById('status').innerText = "🟢 Your Turn (X)";
+                        }, 600); 
                     }
                 }
             });
         });
 
-        // --- CHAT & RESET ---
+        // ==============================================
+        //           CHAT SYSTEM & GAME RESET
+        // ==============================================
         document.getElementById('send-btn').onclick = async () => {
-            await addDoc(chatRef, { sender: currentUser.displayName, text: document.getElementById('msg-input').value, timestamp: Date.now() });
-            document.getElementById('msg-input').value = "";
+            const input = document.getElementById('msg-input');
+            if (input.value.trim() !== "" && currentUser) {
+                try {
+                    await addDoc(chatRef, { sender: currentUser.displayName, text: input.value, timestamp: Date.now() });
+                    input.value = "";
+                } catch(e) { console.error("Chat error", e); }
+            }
         };
 
+        try {
+            onSnapshot(query(chatRef, orderBy("timestamp", "asc")), (snapshot) => {
+                const box = document.getElementById('messages');
+                box.innerHTML = '';
+                snapshot.forEach((doc) => {
+                    const msg = doc.data();
+                    const msgElem = document.createElement('p');
+                    msgElem.innerHTML = `<span class="sender-name">${msg.sender}:</span> ${msg.text}`;
+                    box.appendChild(msgElem);
+                });
+                box.scrollTop = box.scrollHeight;
+            });
+        } catch(e) { console.error("Chat sync error", e); }
+
         document.getElementById('reset-btn').onclick = async () => {
-            if(currentMode === "online") await updateDoc(gameRef, { board: Array(9).fill(""), turn: "X", winner: null });
-            else { localBoard = Array(9).fill(""); localTurn = "X"; isLocalGameActive = true; renderLocalBoard(); }
+            if(currentMode === "online") {
+                if(!playerSymbol) return; 
+                try { await updateDoc(gameRef, { board: Array(9).fill(""), turn: "X", winner: null }); } catch(e){}
+            } else if(currentMode === "offline") {
+                startOfflinePlay();
+            } else if(currentMode === "computer") {
+                startGameWithDifficulty(aiDifficulty);
+            }
         };
+
     </script>
 </body>
 </html>

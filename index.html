@@ -65,7 +65,7 @@
             border: 4px solid #38bdf8; margin-bottom: 15px;
         }
         .profile-container h2 { color: #f8fafc; margin-bottom: 5px; }
-        .profile-container p { color: #94a3b8; font-size: 0.9rem; margin-bottom: 20px; }
+        .profile-container p { color: #94a3b8; font-size: 1rem; margin-bottom: 20px; font-weight: bold; }
         .profile-coins {
             font-size: 1.5rem; color: #fbbf24; font-weight: bold; background: #0f172a;
             padding: 10px; border-radius: 10px; border: 1px solid #334155;
@@ -140,29 +140,22 @@
         
         /* VS Header inside Game Board */
         .game-vs-header {
-            display: flex; justify-content: space-between; align-items: center;
+            display: flex; justify-content: space-between; align-items: flex-end;
             background: #334155; padding: 10px 15px; border-radius: 12px;
             margin-bottom: 15px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
         }
         .game-vs-header .p-box { display: flex; flex-direction: column; align-items: center; width: 80px; }
+        .game-vs-header .timer-span { font-size: 1rem; font-weight: bold; color: #fbbf24; min-height: 20px; margin-bottom: 5px; }
         .game-vs-header img { width: 45px; height: 45px; border-radius: 50%; border: 2px solid #38bdf8; object-fit: cover; background: #1e293b; }
-        .game-vs-header span { font-size: 0.8rem; font-weight: bold; margin-top: 5px; color: #f8fafc; text-align: center; line-height: 1.1; }
-        .game-vs-header .vs-badge { color: #e11d48; font-weight: bold; font-size: 1.3rem; text-shadow: 0 0 5px rgba(225, 29, 72, 0.5); }
+        .game-vs-header span.name-span { font-size: 0.8rem; font-weight: bold; margin-top: 5px; color: #f8fafc; text-align: center; line-height: 1.1; }
+        .game-vs-header .vs-badge { color: #e11d48; font-weight: bold; font-size: 1.3rem; text-shadow: 0 0 5px rgba(225, 29, 72, 0.5); margin-bottom: 15px;}
 
         #status { font-size: 1.1rem; margin-bottom: 15px; color: #38bdf8; font-weight: 600; }
         .board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
         .cell { width: 90px; height: 90px; background: #334155; border-radius: 12px; display: flex; justify-content: center; align-items: center; font-size: 3rem; font-weight: bold; cursor: pointer; box-shadow: inset 0 2px 5px rgba(0,0,0,0.2); transition: 0.2s;}
         .cell:hover { background: #475569; }
-        .chat-box { margin-top: 10px; background: #0f172a; padding: 12px; border-radius: 12px; border: 1px solid #334155; }
-        #messages { height: 110px; overflow-y: auto; text-align: left; font-size: 0.9rem; margin-bottom: 10px; padding: 10px; background: #1e293b; border-radius: 8px; }
-        #messages p { margin: 5px 0; color: #cbd5e1; }
-        .sender-name { color: #38bdf8; font-weight: bold; }
-        .input-area { display: flex; gap: 8px; }
-        input { flex: 1; padding: 10px; border: 1px solid #334155; border-radius: 6px; background: #1e293b; color: white; outline: none; }
-        #send-btn { padding: 10px 18px; border: none; background: #4f46e5; color: white; font-weight: bold; cursor: pointer; border-radius: 6px; }
-        #reset-btn { padding: 12px 20px; background: #e11d48; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; }
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
+        
+        #reset-btn { padding: 12px 20px; background: #e11d48; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; }
 
         /* --- Confetti Animation --- */
         .confetti {
@@ -203,7 +196,7 @@
         <div class="profile-container">
             <img id="prof-page-img" src="" alt="Profile">
             <h2 id="prof-page-name">User Name</h2>
-            <p id="prof-page-email">user@email.com</p>
+            <p id="prof-page-email" style="color: #4ade80;">Player Name</p>
             <div class="profile-coins">🪙 <span id="prof-page-coins">0</span></div>
         </div>
     </div>
@@ -286,16 +279,18 @@
 
         <div class="game-container">
             
-            <!-- VS Header Card -->
+            <!-- VS Header Card with Timers -->
             <div class="game-vs-header">
                 <div class="p-box">
+                    <span class="timer-span" id="game-p1-timer"></span>
                     <img id="game-p1-img" src="https://cdn-icons-png.flaticon.com/512/149/149071.png">
-                    <span id="game-p1-name">Player X</span>
+                    <span class="name-span" id="game-p1-name">Player X</span>
                 </div>
                 <div class="vs-badge">VS</div>
                 <div class="p-box">
+                    <span class="timer-span" id="game-p2-timer"></span>
                     <img id="game-p2-img" src="https://cdn-icons-png.flaticon.com/512/149/149071.png">
-                    <span id="game-p2-name">Player O</span>
+                    <span class="name-span" id="game-p2-name">Player O</span>
                 </div>
             </div>
 
@@ -308,15 +303,6 @@
             </div>
 
             <button id="reset-btn">Restart Game</button>
-
-            <!-- Chat Box (Hide in Offline/Computer Mode) -->
-            <div class="chat-box" id="chat-section">
-                <div id="messages"></div>
-                <div class="input-area">
-                    <input type="text" id="msg-input" placeholder="Type a message...">
-                    <button id="send-btn">Send</button>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -325,7 +311,7 @@
          ============================================== -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, setDoc, getDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
         const firebaseConfig = {
@@ -343,13 +329,16 @@
         const defaultDp = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
         const robotDp = "https://cdn-icons-png.flaticon.com/512/4712/4712035.png";
 
-        // Global Game Modes
+        // Global Game Modes & Timers
         let currentMode = "online"; 
         let aiDifficulty = "Easy";
         let localBoard = Array(9).fill("");
         let localTurn = "X";
         let isLocalGameActive = false;
         let vsListener = null;
+        
+        let turnTimer = null;
+        let timeLeft = 10;
 
         // UI Toggles
         window.toggleAuth = () => {
@@ -359,14 +348,26 @@
             else { login.style.display = 'none'; reg.style.display = 'block'; }
         };
 
-        // --- HARDWARE BACK BUTTON LOGIC (Hash Routing) ---
-        window.addEventListener('hashchange', () => {
+        // --- HARDWARE BACK BUTTON LOGIC ---
+        window.addEventListener('hashchange', async () => {
             if (!currentUser) return; 
             const hash = window.location.hash;
             
-            // --- NEW: Remove player from DB if they go back from online match ---
+            // OPPONENT QUIT -> WIN LOGIC 
             if ((hash === '' || hash === '#home') && currentMode === "online" && playerSymbol) {
-                try { updateDoc(gameRef, { [playerSymbol === "X" ? "playerX" : "playerO"]: null }); } catch(e){}
+                try {
+                    const docSnap = await getDoc(gameRef);
+                    if(docSnap.exists()){
+                        const data = docSnap.data();
+                        // If game was ongoing, give win to opponent
+                        if(!data.winner && data.playerX && data.playerO){
+                            const oppName = playerSymbol === "X" ? data.playerO.name : data.playerX.name;
+                            await updateDoc(gameRef, { winner: oppName, [playerSymbol === "X" ? "playerX" : "playerO"]: null });
+                        } else {
+                            await updateDoc(gameRef, { [playerSymbol === "X" ? "playerX" : "playerO"]: null });
+                        }
+                    }
+                } catch(e){}
                 playerSymbol = null;
             }
             
@@ -386,23 +387,21 @@
                 document.getElementById('vs-page').style.display = 'flex';
             } else if (hash === '#game') {
                 document.getElementById('game-page').style.display = 'flex';
-                document.getElementById('chat-section').style.display = (currentMode === 'online') ? 'block' : 'none';
             } else {
-                // Default is Home Page
                 document.getElementById('home-page').style.display = 'flex';
                 if(vsListener) { vsListener(); vsListener = null; }
                 isLocalGameActive = false;
+                clearInterval(turnTimer);
             }
         });
 
-        // --- NEW: Clean up if user closes the tab/app ---
+        // App closed / Tab closed
         window.addEventListener('beforeunload', () => {
             if (currentMode === "online" && playerSymbol) {
                 updateDoc(gameRef, { [playerSymbol === "X" ? "playerX" : "playerO"]: null });
             }
         });
 
-        // Trigger Back programmatically for UI buttons
         window.goBack = () => {
             if (window.location.hash !== '' && window.location.hash !== '#home') {
                 history.back();
@@ -414,15 +413,12 @@
             window.location.hash = 'profile';
             document.getElementById('prof-page-img').src = currentUser.photoURL || defaultDp;
             document.getElementById('prof-page-name').innerText = currentUser.displayName;
-            document.getElementById('prof-page-email').innerText = currentUser.email;
+            document.getElementById('prof-page-email').innerText = "Name: " + currentUser.displayName; // Email replaced with Name
             document.getElementById('prof-page-coins').innerText = userCoins;
         };
 
         window.closeProfile = () => { window.goBack(); };
-
-        window.showDifficultyPage = () => {
-            window.location.hash = 'difficulty';
-        };
+        window.showDifficultyPage = () => { window.location.hash = 'difficulty'; };
 
         function updateGameVSHeader(p1Name, p1Img, p2Name, p2Img) {
             document.getElementById('game-p1-name').innerText = p1Name;
@@ -454,8 +450,6 @@
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUser = user;
-                
-                // Initialize default hash if loading directly
                 if (window.location.hash === '') history.replaceState(null, null, '#home');
 
                 try {
@@ -471,8 +465,6 @@
                 
                 updateCoinDisplay();
                 document.getElementById('auth-page').style.display = 'none';
-                
-                // Manually trigger hash route to show correct page on load
                 window.dispatchEvent(new Event('hashchange'));
                 
                 document.getElementById('header-name').innerText = user.displayName || "Gamer";
@@ -529,6 +521,106 @@
 
 
         // ==============================================
+        //           TIMER & AUTO MOVE LOGIC
+        // ==============================================
+        function resetAndStartTimer(activeTurnSymbol) {
+            clearInterval(turnTimer);
+            document.getElementById('game-p1-timer').innerText = "";
+            document.getElementById('game-p2-timer').innerText = "";
+            
+            if (isLocalGameActive === false && currentMode !== "online") return;
+
+            timeLeft = 10;
+            let isMyTurnLocal = false;
+            let showOnP1 = false;
+
+            if(currentMode === "online") {
+                isMyTurnLocal = (playerSymbol === activeTurnSymbol);
+                showOnP1 = (activeTurnSymbol === playerSymbol); // My timer always on P1's side visually based on our mapping
+            } else {
+                isMyTurnLocal = (currentMode === "offline") ? true : (activeTurnSymbol === "X");
+                showOnP1 = (activeTurnSymbol === "X");
+            }
+
+            // If computer's turn, show thinking, don't run numerical timer
+            if (currentMode === "computer" && activeTurnSymbol === "O") {
+                document.getElementById('game-p2-timer').innerText = "⏱ Thinking...";
+                return;
+            }
+
+            // Initial visual set
+            if(showOnP1) document.getElementById('game-p1-timer').innerText = `⏱ ${timeLeft}s`;
+            else document.getElementById('game-p2-timer').innerText = `⏱ ${timeLeft}s`;
+
+            turnTimer = setInterval(() => {
+                timeLeft--;
+                if(showOnP1) document.getElementById('game-p1-timer').innerText = `⏱ ${timeLeft}s`;
+                else document.getElementById('game-p2-timer').innerText = `⏱ ${timeLeft}s`;
+
+                // VIBRATION at 5s remaining
+                if (timeLeft <= 5 && timeLeft > 0 && isMyTurnLocal) {
+                    if (navigator.vibrate) navigator.vibrate(100);
+                }
+
+                // AUTO MOVE at 0s
+                if (timeLeft <= 0) {
+                    clearInterval(turnTimer);
+                    if (isMyTurnLocal) executeAutoMove(activeTurnSymbol);
+                }
+            }, 1000);
+        }
+
+        async function executeAutoMove(sym) {
+            let board = (currentMode === "online") ? onlineBoard : localBoard;
+            let emptySpots = board.map((v, i) => v === "" ? i : null).filter(v => v !== null);
+            if(emptySpots.length === 0) return;
+            let randomIdx = emptySpots[Math.floor(Math.random() * emptySpots.length)];
+
+            if (currentMode === "online") {
+                try {
+                    const docSnap = await getDoc(gameRef);
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        if (data.turn === sym && onlineBoard[randomIdx] === "" && !data.winner) {
+                            onlineBoard[randomIdx] = sym;
+                            const nextTurn = sym === "X" ? "O" : "X";
+                            const winSym = checkWinner(onlineBoard);
+                            const winnerName = winSym === "X" ? data.playerX.name : (winSym === "O" ? data.playerO.name : winSym);
+                            await updateDoc(gameRef, { board: onlineBoard, turn: nextTurn, winner: winnerName || null });
+                        }
+                    }
+                } catch(e){}
+            } else {
+                localBoard[randomIdx] = sym;
+                let win = checkWinner(localBoard);
+                renderLocalBoard();
+                if(win) { handleLocalWin(win); return; }
+                
+                localTurn = sym === "X" ? "O" : "X";
+                if (currentMode === "offline") {
+                    document.getElementById('status').innerText = `Player ${localTurn}'s Turn`;
+                    resetAndStartTimer(localTurn);
+                } else if (currentMode === "computer") {
+                    document.getElementById('status').innerText = "🤖 Computer is thinking...";
+                    resetAndStartTimer("O");
+                    setTimeout(() => {
+                        if(!isLocalGameActive) return;
+                        makeComputerMove();
+                        win = checkWinner(localBoard);
+                        localTurn = "X";
+                        renderLocalBoard();
+                        if(win) handleLocalWin(win);
+                        else {
+                            document.getElementById('status').innerText = "🟢 Your Turn (X)";
+                            resetAndStartTimer("X");
+                        }
+                    }, 600);
+                }
+            }
+        }
+
+
+        // ==============================================
         //           1. COMPUTER PLAY LOGIC
         // ==============================================
         window.startGameWithDifficulty = (diff) => {
@@ -538,12 +630,11 @@
             localTurn = "X"; 
             isLocalGameActive = true;
             
-            // Route to Game Screen
             window.location.hash = 'game';
-            
             updateGameVSHeader(currentUser.displayName, currentUser.photoURL, `Computer (${diff})`, robotDp);
             document.getElementById('status').innerText = "🟢 Your Turn (X)";
             renderLocalBoard();
+            resetAndStartTimer("X");
         };
 
         function minimax(board, isMaximizing) {
@@ -578,17 +669,13 @@
         }
 
         function getHardMove() {
-            let bestScore = -Infinity;
-            let move = -1;
+            let bestScore = -Infinity; let move = -1;
             for (let i = 0; i < 9; i++) {
                 if (localBoard[i] === "") {
                     localBoard[i] = "O";
                     let score = minimax(localBoard, false);
                     localBoard[i] = "";
-                    if (score > bestScore) {
-                        bestScore = score;
-                        move = i;
-                    }
+                    if (score > bestScore) { bestScore = score; move = i; }
                 }
             }
             return move;
@@ -596,18 +683,10 @@
 
         function getMediumMove() {
             for (let i = 0; i < 9; i++) {
-                if (localBoard[i] === "") {
-                    localBoard[i] = "O";
-                    if(checkWinner(localBoard) === "O") { localBoard[i] = ""; return i; }
-                    localBoard[i] = "";
-                }
+                if (localBoard[i] === "") { localBoard[i] = "O"; if(checkWinner(localBoard) === "O") { localBoard[i] = ""; return i; } localBoard[i] = ""; }
             }
             for (let i = 0; i < 9; i++) {
-                if (localBoard[i] === "") {
-                    localBoard[i] = "X";
-                    if(checkWinner(localBoard) === "X") { localBoard[i] = ""; return i; }
-                    localBoard[i] = "";
-                }
+                if (localBoard[i] === "") { localBoard[i] = "X"; if(checkWinner(localBoard) === "X") { localBoard[i] = ""; return i; } localBoard[i] = ""; }
             }
             let emptySpots = localBoard.map((v, i) => v === "" ? i : null).filter(v => v !== null);
             return emptySpots[Math.floor(Math.random() * emptySpots.length)];
@@ -621,7 +700,6 @@
                 let emptySpots = localBoard.map((v, i) => v === "" ? i : null).filter(v => v !== null);
                 if(emptySpots.length > 0) moveIdx = emptySpots[Math.floor(Math.random() * emptySpots.length)];
             }
-            
             if(moveIdx !== -1 && moveIdx !== undefined) localBoard[moveIdx] = "O";
         }
 
@@ -635,12 +713,11 @@
             localTurn = "X";
             isLocalGameActive = true;
 
-            // Route to Game Screen
             window.location.hash = 'game';
-            
             updateGameVSHeader("Player X", defaultDp, "Player O", defaultDp);
             document.getElementById('status').innerText = "Player X's Turn";
             renderLocalBoard();
+            resetAndStartTimer("X");
         };
 
         function renderLocalBoard() {
@@ -653,7 +730,11 @@
 
         function handleLocalWin(winner) {
             isLocalGameActive = false;
+            clearInterval(turnTimer);
+            document.getElementById('game-p1-timer').innerText = "";
+            document.getElementById('game-p2-timer').innerText = "";
             renderLocalBoard();
+            
             if(winner === "Draw") {
                 document.getElementById('status').innerText = "🤝 Game is a Draw!";
             } else {
@@ -678,8 +759,7 @@
         // ==============================================
         const gameId = "global_room"; 
         const gameRef = doc(db, "games", gameId);
-        const chatRef = collection(db, "chats");
-
+        
         let playerSymbol = null;
         let onlineBoard = Array(9).fill("");
 
@@ -693,15 +773,12 @@
             document.getElementById('vs-p2-name').innerText = "Waiting...";
             document.getElementById('vs-p2-img').src = defaultDp;
 
-            // Route to VS Screen
             window.location.hash = 'vs';
-
             const myData = { uid: currentUser.uid, name: currentUser.displayName, photo: currentUser.photoURL || defaultDp };
             
             try {
                 const docSnap = await getDoc(gameRef);
 
-                // --- NEW: Reset room if it's completely abandoned ---
                 if (!docSnap.exists() || docSnap.data().winner !== null || (!docSnap.data().playerX && !docSnap.data().playerO)) {
                     await setDoc(gameRef, { playerX: myData, playerO: null, board: Array(9).fill(""), turn: "X", winner: null });
                     playerSymbol = "X";
@@ -730,9 +807,8 @@
                                 history.replaceState(null, null, '#game');
                                 window.dispatchEvent(new Event('hashchange')); 
                                 
-                                const p1 = playerSymbol === "X" ? myData : opponent;
-                                const p2 = playerSymbol === "X" ? opponent : myData;
-                                updateGameVSHeader(p1.name, p1.photo, p2.name, p2.photo);
+                                // Mapping to Header: P1 = My Data, P2 = Opponent
+                                updateGameVSHeader(myData.name, myData.photo, opponent.name, opponent.photo);
 
                                 if(vsListener) { vsListener(); vsListener = null; }
                                 startOnlineBoardListener(); 
@@ -755,21 +831,34 @@
                     cells[i].style.color = val === "X" ? "#38bdf8" : (val === "O" ? "#fbbf24" : "#f8fafc");
                 });
 
-                if (data.winner) {
+                // Check if Opponent Quit during active match
+                if ((playerSymbol === "X" && !data.playerO) || (playerSymbol === "O" && !data.playerX)) {
+                    if (!data.winner) {
+                        document.getElementById('status').innerText = "⚠️ Opponent Left! You Win!";
+                        clearInterval(turnTimer);
+                        document.getElementById('game-p1-timer').innerText = "";
+                        document.getElementById('game-p2-timer').innerText = "";
+                        triggerWinAnimation();
+                        document.getElementById('coin-popup').style.display = 'flex';
+                        updateDoc(gameRef, { winner: currentUser.displayName }); // Formally mark win
+                    }
+                } 
+                else if (data.winner) {
+                    clearInterval(turnTimer);
+                    document.getElementById('game-p1-timer').innerText = "";
+                    document.getElementById('game-p2-timer').innerText = "";
+
                     if(data.winner === "Draw") {
                         document.getElementById('status').innerText = "🤝 Game is a Draw!";
                     } else {
                         document.getElementById('status').innerText = `🏆 ${data.winner} Wins!`;
                         if(data.winner === currentUser.displayName) triggerWinAnimation();
                     }
-                } else {
-                    // --- NEW: Show if opponent left mid-game ---
-                    if ((playerSymbol === "X" && !data.playerO) || (playerSymbol === "O" && !data.playerX)) {
-                        document.getElementById('status').innerText = "⚠️ Opponent Left!";
-                    } else {
-                        const isMyTurn = data.turn === playerSymbol;
-                        document.getElementById('status').innerText = isMyTurn ? "🟢 Your Turn!" : "🔴 Opponent's Turn";
-                    }
+                } 
+                else {
+                    const isMyTurn = data.turn === playerSymbol;
+                    document.getElementById('status').innerText = isMyTurn ? "🟢 Your Turn!" : "🔴 Opponent's Turn";
+                    resetAndStartTimer(data.turn);
                 }
             });
         }
@@ -808,6 +897,7 @@
                             localTurn = localTurn === "X" ? "O" : "X";
                             document.getElementById('status').innerText = `Player ${localTurn}'s Turn`;
                             renderLocalBoard();
+                            resetAndStartTimer(localTurn);
                         }
                     }
                 }
@@ -822,6 +912,7 @@
 
                         localTurn = "O";
                         document.getElementById('status').innerText = "🤖 Computer is thinking...";
+                        resetAndStartTimer("O");
                         
                         setTimeout(() => {
                             if(!isLocalGameActive) return;
@@ -830,40 +921,17 @@
                             localTurn = "X";
                             renderLocalBoard();
                             if(win) handleLocalWin(win);
-                            else document.getElementById('status').innerText = "🟢 Your Turn (X)";
+                            else {
+                                document.getElementById('status').innerText = "🟢 Your Turn (X)";
+                                resetAndStartTimer("X");
+                            }
                         }, 600); 
                     }
                 }
             });
         });
 
-        // ==============================================
-        //           CHAT SYSTEM & GAME RESET
-        // ==============================================
-        document.getElementById('send-btn').onclick = async () => {
-            const input = document.getElementById('msg-input');
-            if (input.value.trim() !== "" && currentUser) {
-                try {
-                    await addDoc(chatRef, { sender: currentUser.displayName, text: input.value, timestamp: Date.now() });
-                    input.value = "";
-                } catch(e) { console.error("Chat error", e); }
-            }
-        };
-
-        try {
-            onSnapshot(query(chatRef, orderBy("timestamp", "asc")), (snapshot) => {
-                const box = document.getElementById('messages');
-                box.innerHTML = '';
-                snapshot.forEach((doc) => {
-                    const msg = doc.data();
-                    const msgElem = document.createElement('p');
-                    msgElem.innerHTML = `<span class="sender-name">${msg.sender}:</span> ${msg.text}`;
-                    box.appendChild(msgElem);
-                });
-                box.scrollTop = box.scrollHeight;
-            });
-        } catch(e) { console.error("Chat sync error", e); }
-
+        // Restart Game Button Handler
         document.getElementById('reset-btn').onclick = async () => {
             if(currentMode === "online") {
                 if(!playerSymbol) return; 
